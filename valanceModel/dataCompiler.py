@@ -1,6 +1,13 @@
+############################################
+############################################
+########## DEPRECATED - DO NOT USE ##########
+############################################
+############################################
+
 from stanfordcorenlp import StanfordCoreNLP
 import json
 import sys
+
 
 # This function takes in sentences and creates a list of tuples which associate
 #  adv-verb and noun-adj pairs with the sentiment of their full sentence
@@ -92,10 +99,10 @@ if __name__ == '__main__':
         with open(f, 'r') as inFile:
             lines=inFile.readlines()
 
-            while (True):
+            while (i >= len(lines)):
                 data = ""
 
-                # StanfordCoreNLP code failes if string too long, so break up
+                # StanfordCoreNLP code fails if string too long, so break up
                 #  into groups of 100 sentences
                 for _ in range(100):
                     i += 1
