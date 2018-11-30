@@ -127,8 +127,10 @@ def getTrainPairTuples():
 # - number of times sentiment group occurs (C)
 # - number of times word + sent group occours ( N(f=w_i, C=c_j) )
 # - number of words in the vocab
-# - set of all seen pairs <- (for selection method, not bayes calcs)
-# - number of pairs <- (for selection method, not bayes calcs)
+# - set of all seen pairs                       <- (for selection method, not bayes calcs)
+# - number of pairs                             <- (for selection method, not bayes calcs)
+# - 2D map of noun -> adjectives -> pair count  <- (for selection method, not bayes calcs)
+# - 2D map of verb -> adverb -> pair count      <- (for selection method, not bayes calcs)
 def getTrainCounts():
 
     # - number of times sentiment group occurs (C)
@@ -145,6 +147,12 @@ def getTrainCounts():
 
     # - number of words in the vocab (unique)
     word_set = set()
+
+    # - 2D map of noun -> adjectives -> pair count
+    nounAdjCount_map = {}
+
+    # - 2D map of verb -> adverb -> pair count
+    verbAdvCount_map = {}
 
 
     # open the review pair tuples
@@ -183,12 +191,48 @@ def getTrainCounts():
         word_set.add(p[1])
         word_set.add(p[2])
 
+        # - 2D map of noun -> adjectives -> pair count
+        # - 2D map of verb -> adverb -> pair count
+        modifiedWord = p[1]
+        modifierWord  = p[2]
+        relationship = p[0]
+        if relationship == "amod":
+
+            # if noun not yet in map, add it as empty map
+            if modifiedWord not in nounAdjCount_map:
+                nounAdjCount_map[modifiedWord] = {}
+
+            # if adj not yet in [noun] map, add it as 0 count int
+            if modifierWord not in nounAdjCount_map[modifiedWord]:
+                nounAdjCount_map[modifiedWord][modifierWord] = 0
+
+            # increment the count of this noun-adj pair
+            nounAdjCount_map[modifiedWord][modifierWord] += 1
+
+        elif relationship == "advmod":
+
+            # if verb not yet in map, add it as empty map
+            if modifiedWord not in verbAdvCount_map:
+                verbAdvCount_map[modifiedWord] = {}
+
+            # if adverb not yet in [verb] map, add it as 0 count int
+            if modifierWord not in verbAdvCount_map[modifiedWord]:
+                verbAdvCount_map[modifiedWord][modifierWord] = 0
+
+            # increment the count of this adverb-adj pair
+            verbAdvCount_map[modifiedWord][modifierWord] += 1
+
+
+
     finalMap = {}
     finalMap["classCounts"] = classCounts
     finalMap["wordClassCount"] = wordClassCount_tupMap
     finalMap["allPairs"] = allPairs_tupSet
     finalMap["pairCount"] = pairCount
     finalMap["uniqueWordCount"] = len(word_set)
+    finalMap["nounAdjCount"] = nounAdjCount_map
+    finalMap["verbAdvCount"] = verbAdvCount_map
+
 
     # save the counts
     with open('trainCounts_imdb.pkl', 'wb') as trainCountsFile:

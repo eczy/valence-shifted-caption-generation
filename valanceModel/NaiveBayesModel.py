@@ -13,13 +13,19 @@ class sentimentModel:
     _wordClassCount_tupMap = {}
 
     # - set of all seen pairs
-    _allPairs_tupSet = set()
+    allPairs_tupSet = set()
 
     # - number of pairs (non-unique)
-    _pairCount_int = 0
+    pairCount_int = 0
 
     # - number of words in the vocab (unique)
     _uniqueWordCount = 0
+
+    # - 2D map of noun -> adjectives -> pair count
+    nounAdjCount_map = {}
+
+    # - 2D map of verb -> adverb -> pair count
+    verbAdvCount_map = {}
 
     # basic constructor
     #   Loads in necessary information from pickle count file in
@@ -32,9 +38,11 @@ class sentimentModel:
 
         self._classCounts_map         = countsMap["classCounts"]
         self._wordClassCount_tupMap   = countsMap["wordClassCount"]
-        self._allPairs_tupSet         = countsMap["allPairs"]
-        self._pairCount_int           = countsMap["pairCount"]
-        self._uniqueWordCount                = countsMap["_uniqueWordCount"]
+        self.allPairs_tupSet         = countsMap["allPairs"]
+        self.pairCount_int           = countsMap["pairCount"]
+        self._uniqueWordCount         = countsMap["uniqueWordCount"]
+        self.nounAdjCount_map         = countsMap["nounAdjCount"]
+        self.verbAdvCount_map         = countsMap["verbAdvCount"]
 
 
 
