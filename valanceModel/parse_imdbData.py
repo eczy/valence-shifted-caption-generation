@@ -4,34 +4,6 @@ import sys
 import os
 import pickle
 
-# this function prepares the text from a review for parsing
-# it removes html format text (i.e. <br /><br />)
-# note: cannot yet remove capitlization or punctuation because StanfordCoreNLP
-#        requires those features for its parsing
-def prepReviewText(text):
-
-    # remove formating text inside of < >
-    startIdx = text.find("<")
-    endIdx = text.find(">")
-    while startIdx != -1 and endIdx != -1:
-        text = text[: startIdx] + text[endIdx+1 :]
-        startIdx = text.find("<")
-        endIdx = text.find(">",startIdx)
-
-
-    # remove escape characters (backslashes)
-    escIdx = text.find("\\")
-    while escIdx != -1:
-        text = text[: escIdx] + text[escIdx+1 :]
-        escIdx = text.find("\\", escIdx-1)
-
-    # remove astriks (*)
-    astIdx = text.find("*")
-    while astIdx != -1:
-        text = text[: astIdx] + text[astIdx+1 :]
-        astIdx = text.find("*", astIdx-1)
-
-    return text
 
 #   This function gets all of the training tuples from the imdb data files
 # and saves them in a pickle
@@ -79,6 +51,38 @@ def getTrainSentenceTuples():
         with open('trainSentenceTuples_imdb.pkl', 'wb') as trainDataFile:
             pickle.dump(trainData, trainDataFile)
 
+
+# this function prepares the text from a review for parsing
+# it removes html format text (i.e. <br /><br />)
+# note: cannot yet remove capitlization or punctuation because StanfordCoreNLP
+#        requires those features for its parsing
+def prepReviewText(text):
+
+    # remove formating text inside of < >
+    startIdx = text.find("<")
+    endIdx = text.find(">")
+    while startIdx != -1 and endIdx != -1:
+        text = text[: startIdx] + text[endIdx+1 :]
+        startIdx = text.find("<")
+        endIdx = text.find(">",startIdx)
+
+
+    # remove escape characters (backslashes)
+    escIdx = text.find("\\")
+    while escIdx != -1:
+        text = text[: escIdx] + text[escIdx+1 :]
+        escIdx = text.find("\\", escIdx-1)
+
+    # remove astriks (*)
+    astIdx = text.find("*")
+    while astIdx != -1:
+        text = text[: astIdx] + text[astIdx+1 :]
+        astIdx = text.find("*", astIdx-1)
+
+    return text
+
+
+
 #   This function gets all pairs from all training data and saves a list
 # of the tuples (pairType, word0, word1, sentiment)
 def getTrainPairTuples():
@@ -121,6 +125,49 @@ def getTrainPairTuples():
     # save the review pair tuples
     with open('trainPairTuples_imdb.pkl', 'wb') as trainPairsDataFile:
         pickle.dump(allPairsWithSentiments, trainPairsDataFile)
+
+
+# from the annotated data get the adv-verb and adj-noun pairs of words
+# input: String of sentences (corenlp will break sentences with natural english rules)
+#        nlp object from StanfordCoreNLP to parse strings with
+# output: list of tuples with info about pairs
+#                                          t[0] = dependency type
+#                                          t[1] = modified word idx (verb/noun)
+#                                          t[2] = modifier word idx (adverb/adj)
+def findPairs(sentences, nlp):
+
+    properties = {'annotators': 'depparse,lemma', 'outputFormat': 'json'}
+
+    # this is a map[string, list[map[string,list[...]]]]
+    ann_dict = json.loads( nlp.annotate(sentences, properties=properties) )
+
+
+    pairsInfo = []
+
+    # for every sentence
+    for sInfo in ann_dict['sentences']:
+        # for every dependency
+        for d in sInfo['enhancedPlusPlusDependencies']:
+            if d['dep'] == 'advmod' or d['dep'] == 'amod': # if adverb-verb or adj-noun pair
+                modifiedIdx = d['governor'] # index of noun/verb
+                modifierIdx = d['dependent'] # index of adj/adv
+                lemmatizedModifiedWord = sInfo['tokens'][modifiedIdx - 1]['lemma']
+                lemmatizedModifierWord = sInfo['tokens'][modifierIdx - 1]['lemma']
+                pairsInfo.append( (d['dep'],lemmatizedModifiedWord,lemmatizedModifierWord) )
+
+    return pairsInfo
+
+# this function converts a rank on a 10 points scale (1 to 10) to the
+# 1 point (-1 to 1) score used to define sentiment
+def convert10PointScaleTo1Point(score):
+    if score == 5:
+        score = 0
+    elif score < 5:
+        score = score - 6
+    else:
+        score = score - 5
+    return score/5
+
 
 
 #   This function processes through the train pair tuples and gets counts of
@@ -223,7 +270,6 @@ def getTrainCounts():
             verbAdvCount_map[modifiedWord][modifierWord] += 1
 
 
-
     finalMap = {}
     finalMap["classCounts"] = classCounts
     finalMap["wordClassCount"] = wordClassCount_tupMap
@@ -239,42 +285,6 @@ def getTrainCounts():
         pickle.dump(finalMap, trainCountsFile)
 
 
-# from the annotated data get the adv-verb and adj-noun pairs of words
-# input: String of sentences (corenlp will break sentences with natural english rules)
-#        nlp object from StanfordCoreNLP to parse strings with
-# output: list of tuples with info about pairs
-#                                          t[0] = dependency type
-#                                          t[1] = modified word idx (verb/noun)
-#                                          t[2] = modifier word idx (adverb/adj)
-def findPairs(sentences, nlp):
-
-    properties = {'annotators': 'depparse', 'outputFormat': 'json'}
-
-    # this is a map[string, list[map[string,list[...]]]]
-    ann_dict = json.loads( nlp.annotate(sentences, properties=properties) )
-
-
-    pairsInfo = []
-
-    # for every sentence
-    for sInfo in ann_dict['sentences']:
-        # for every dependency
-        for d in sInfo['basicDependencies']:
-            if d['dep'] == 'advmod' or d['dep'] == 'amod': # if adverb-verb or adj-noun pair
-                pairsInfo.append( (d['dep'],d['governorGloss'],d['dependentGloss']) )
-
-    return pairsInfo
-
-# this function converts a rank on a 10 points scale (1 to 10) to the
-# 1 point (-1 to 1) score used to define sentiment
-def convert10PointScaleTo1Point(score):
-    if score == 5:
-        score = 0
-    elif score < 5:
-        score = score - 6
-    else:
-        score = score - 5
-    return score/5
 
 # input file format should be one sentence per line with proper punctuation at
 #  the end of sentences
