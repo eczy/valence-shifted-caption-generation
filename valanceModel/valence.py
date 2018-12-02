@@ -42,7 +42,7 @@ class mySentence:
 		self.adverbs = self.getAdverbs()
 
 	def readSentence(self, sentence):
-		nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
+		nlp = StanfordCoreNLP('http://localhost', port=9000, timeout=30000)
 		output = json.loads(nlp.annotate(sentence, properties = {
 			"annotators": "tokenize,ssplit,parse,sentiment,lemma",
 			"outputFormat": "json",

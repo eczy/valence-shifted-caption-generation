@@ -1,5 +1,6 @@
 import csv
 import os
+import numpy as np
 from valence import mySentence
 
 class PostFilter:
@@ -12,18 +13,21 @@ class PostFilter:
 	_strong = False
 	_power = False
 	_pain = False
+	_feel = False
 	_emotion = False
 
-	def __init__(self, hostile=False, strong=False, power=False, pain=False, emotion=False):
+	# Creates a post filter object with certain sets of filters
+	def __init__(self, hostile=False, strong=False, power=False, pain=False, feel=False, emotion=False):
 		self._hostile = hostile
 		self._strong = strong
 		self._power = power
 		self._pain = pain
+		self._feel = feel
 		self._emotion = emotion
 		if not os.path.exists(os.getcwd() + '/genaralInquirerLexicon.pkl'):
 			self.parseGeneralInquirerLexicon('inquirerbasic.csv')
 
-
+	# Internal function that parses the GIL csv and tags words with certain categories
 	def parseGeneralInquirerLexicon(self, filename):
 		with open(filename, 'r') as csvfile:
 			csvReader = csv.reader(csvfile, delimiter=',')
@@ -58,17 +62,88 @@ class PostFilter:
 						self._negativeWords[word][key] = subInformation[key]
 					negCount += 1
 
-	def filter(sentence):
+	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
+	def filter(self, sentence, pos=False, neg=False, union=False, intersection=False):
 		s = mySentence(sentence)
 		adjectives = s.adjectives
 		adverbs = s.adjverbs
 
-		commonAdjectives = set([a for a in adjectives if a in self._positiveWords])
-		commonAdverbs = set([a for a in adjectives if a in self._positiveWords])
+		if pos:
+			commonAdjectives = set([a for a in adjectives if a in self._positiveWords])
+			commonAdverbs = set([a for a in adverbs if a in self._positiveWords])
+		if neg:
+			commonAdjectives = set([a for a in adjectives if a in self._negativeWords])
+			commonAdverbs = set([a for a in adverbs if a in self._negativeWords])
+
+		if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
+			randAdj = np.random.randint(0,len(commonAdjectives))
+			randAdv = np.random.randint(0,len(commonAdverbs))
+			return commonAdjectives[randAdj], commonAdverbs[randAdv]
+
+		filters = []
+		if self._hostile: filters.append('hostile')
+		if self._strong: filters.append('strong')
+		if self._power: filters.append('power')
+		if self._pain: filters.append('pain')
+		if self._feel: filters.append('feel')
+		if self._emotion: filters.append('emotion')
+
+		filteredAdjectives = []
+		filteredAdverbs = []
+
+		for adjective in adjectives:
+			if union:
+				if self.inUnion(adjective, filters, pos=pos, neg=neg):
+					filteredAdjectives.append(adjective)
+			elif intersection:
+				if self.inIntersection(adjective, filters, pos=pos, neg=neg):
+					filteredAdjectives.append(adjective)
+
+		filteredAdjectives = list(set(filteredAdjectives))
+
+		for adverb in adverbs:
+			if union:
+				if self.inUnion(adverb, filters, pos=pos, neg=neg):
+					filteredAdverbs.append(adverb)
+			elif intersection:
+				if self.inIntersection(adverb, filters, pos=pos, neg=neg):
+					filteredAdverbs.append(adverb)
+
+		filteredAdverbs = list(set(filteredAdverbs))
+
+		randAdj = np.random.randint(0,len(commonAdjectives))
+		randAdv = np.random.randint(0,len(commonAdverbs))
+		return filteredAdjectives[randAdj], filteredAdverbs[randAdv]
+
+	def inUnion(self, word, filters, pos=True, neg=True):
+		if pos:
+			for f in filters:
+				if self._positiveWords[word][f]:
+					return True
+			return False
+		if neg:
+			for f in filters:
+				if self._negativeWords[word][f]:
+					return True
+			return False
+
+	def inIntersection(self, word, filters, pos=True, neg=True):
+		if pos:
+			for f in filters:
+				if not self._positiveWords[word][f]:
+					return False
+			return True
+		if neg:
+			for f in filters:
+				if not self._negativeWords[word][f]:
+					return False
+			return True
+
 
 
 
 
 if __name__ == '__main__':
 	filteredAdjectivesAndAdverbs = PostFilter()
-	filteredAdjectivesAndAdverbs.filter(word)	
+	adj, adv = filteredAdjectivesAndAdverbs.filter('the man watched the movie')
+	print(adj, adv)
