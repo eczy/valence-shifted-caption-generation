@@ -43,7 +43,7 @@ class mySentence:
 		self.nouns = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in NOUN_TAGS]
 		self.verbs = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in VERB_TAGS]
 
-		self.adjectrives = self.getAdjectives()
+		self.adjectives = self.getAdjectives()
 		self.adverbs = self.getAdverbs()
 
 		# self.output = ""
