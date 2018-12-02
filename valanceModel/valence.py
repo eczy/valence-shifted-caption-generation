@@ -1,5 +1,6 @@
 from stanfordcorenlp import StanfordCoreNLP
 import NaiveBayesModel as NBM
+from textblob import Word
 import json
 import numpy as np
 from random import randint, sample
