@@ -1,17 +1,20 @@
 from stanfordcorenlp import StanfordCoreNLP
 import NaiveBayesModel as NBM
+import logging
+import pprint
+import json
 import numpy as np
-from textblob import TextBlob
-from textblob import Word
+# from textblob import TextBlob
+# from textblob import Word
 import operator
 import pdb
-from random import randint
+from random import randint, sample
 
 # Expect dictionary of bigram counts for NN-JJ / ADV-VB
 # Expect a model that takes in pairs as input and outputs
 # valence rank.
 
-# There should bea list of adjecrtives that are too common
+# There should be a list of adjecrtives that are too common
 # for use and should be treated as stop words.
 
 # Additionally, we should randomize over the top n adjectrives,
@@ -24,63 +27,88 @@ VERB_TAGS = ['VB','VBD','VBN','VBG','VBP','VBZ']
 
 class mySentence:
 	def __init__(self, sentence):
-		# self.nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g'))
-		# self.text = nlp.annotate(sentence)
-		self.text = TextBlob(sentence)
-		self.numPossible = 20
-		self.words = self.text.words
-		self.nouns = [Word(t[0]).lemmatize() for t in self.text.tags if t[1] in NOUN_TAGS]
-		self.verbs = [Word(t[0]).lemmatize() for t in self.text.tags if t[1] in VERB_TAGS]
+
 		self.model = NBM.sentimentModel()
-		self.adjectives = self.getAdjectives()
+		self.words, self.lemmas, self.tags = [], [], []
+		self.readSentence(sentence)
+
+		# numPossible represents the top n words taken from the corpus, of which
+		# we will choose numChosen of them for possible replacement words.
+		# From each replacement word, we will choose numSynonyms synonyms as 
+		# further possible replacement words.
+		self.numPossible = 20
+		self.numChosen = 20
+		self.numSynonyms = 3
+		
+		self.nouns = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in NOUN_TAGS]
+		self.verbs = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in VERB_TAGS]
+
+		self.adjectrives = self.getAdjectives()
 		self.adverbs = self.getAdverbs()
-		self.output = ""
 
-	def getPolarity(self):
-		return self.text.polarity
+		# self.output = ""
 
-	def getAdjectives(self):
-		adj = {n:{} for n in self.nouns}
-		for word in self.nouns:
-			possible = self.model.nounAdjCount_map[word]
-			possible_sorted = sorted([(possible[k],k) for k in possible], key=lambda x:x[0], reverse=True)
-			chosen_adj = possible_sorted[randint(0, min(self.numPossible, len(possible_sorted)))]
-			# syns, ants = synonyms(chosen_adj[1])
-		return adj
-
-	def getAdverbs(self):
-		adv = {v:{} for v in self.verbs}
-		for word in self.verbs:
-			possible = self.model.verbAdvCount_map[word]
-			possible_sorted = sorted([(possible[k],k) for k in possible], key=lambda x:x[0], reverse=True)
-			adv[word] = possible_sorted[randint(0, min(self.numPossible, len(possible_sorted)))]
-		return adv
-
-	def insertWords(self):
-		for word in self.words:
-			if word in self.nouns:
-				adj = self.adjectives[word][randint(0, len(self.adjectives[word]))][1]
-				self.output += adj + " "
-			# elif word in self.verbs:
-			# 	adv = self.adverbs[word][randint(0, self.numPossible)][1]
-			# 	self.output += adv + " "
-			self.output += word + " "
+	def readSentence(self, sentence):
+		nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
+		output = json.loads(nlp.annotate(sentence, properties = {
+			"annotators": "tokenize,ssplit,parse,sentiment,lemma",
+			"outputFormat": "json",
+			"ssplt.eolonly": "true",
+			"enforceRequirements": "false"
+		}))
+		
+		for a in ((output['sentences'])):
+			for d in a['tokens']:
+				self.lemmas.append(d['lemma'].decode('utf-8'))
+				self.words.append(d['word'].decode('utf-8'))
+				self.tags.append(d['pos'])
+		nlp.close()
 		return
 
-def synonyms(word):
+	def getAdjectives(self):
+		adj_dict = {n:{} for n in self.nouns}
+		for word in self.nouns:
+			possible = self.model.nounAdjCount_map[word]
+			adj_dict[word] = dict.fromkeys(self.possibleReplacements(possible),0)
+		adj_dict = self.valenceRank(adj_dict)
+		return adj_dict
+
+	def getAdverbs(self):
+		adv_dict = {v:{} for v in self.verbs}
+		for word in self.verbs:
+			possible = self.model.verbAdvCount_map[word]
+			adv_dict[word] = dict.fromkeys(self.possibleReplacements(possible),0)
+		adv_dict = self.valenceRank(adv_dict)
+		return adv_dict
+
+	def possibleReplacements(self, possible):
+		possible_sorted = sorted([(possible[k],k) for k in possible], key=lambda x:x[0], reverse=True)
+		chosen = sample(range(0, min(self.numPossible, len(possible_sorted))), self.numChosen)
+		final = set(possible_sorted[i][1] for i in chosen)
+		for a in chosen:
+			final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
+		return final
+
+	def valenceRank(self, input_dict):
+		for noun in input_dict.keys():
+			for adj in input_dict[noun]:
+				input_dict[noun][adj] = self.model.predictedClass(adj, noun)
+		return input_dict
+
+
+def synonyms(word, maxSyns):
 	syns, ants = [], []
 	for syn in Word(word).synsets:
 		for l in syn.lemmas():
 			syns.append(l.name())
-			if l.antonyms():
-				ants.append(l.antonyms()[0].name())
-	return syns, ants
-
+			# if l.antonyms():
+			# 	ants.append(l.antonyms()[0].name())
+	return [syns[i] for i in sample(range(0, len(syns)), min(maxSyns, len(syns)))]
 
 if __name__ == '__main__':
-	s = mySentence("the man watch the movie")
-	print(s.text)
+	s = mySentence("the man watched the movie")
 	print(s.adjectives)
+
 
 
 
