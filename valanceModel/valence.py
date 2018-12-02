@@ -1,13 +1,7 @@
 from stanfordcorenlp import StanfordCoreNLP
 import NaiveBayesModel as NBM
-import logging
-import pprint
 import json
 import numpy as np
-# from textblob import TextBlob
-# from textblob import Word
-import operator
-import pdb
 from random import randint, sample
 
 # Expect dictionary of bigram counts for NN-JJ / ADV-VB
@@ -46,8 +40,6 @@ class mySentence:
 		self.adjectives = self.getAdjectives()
 		self.adverbs = self.getAdverbs()
 
-		# self.output = ""
-
 	def readSentence(self, sentence):
 		nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 		output = json.loads(nlp.annotate(sentence, properties = {
@@ -57,10 +49,10 @@ class mySentence:
 			"enforceRequirements": "false"
 		}))
 		
-		for a in ((output['sentences'])):
+		for a in output['sentences']:
 			for d in a['tokens']:
-				self.lemmas.append(d['lemma'].decode('utf-8'))
-				self.words.append(d['word'].decode('utf-8'))
+				self.lemmas.append(d['lemma'])
+				self.words.append(d['word'])
 				self.tags.append(d['pos'])
 		nlp.close()
 		return
@@ -95,7 +87,6 @@ class mySentence:
 				input_dict[noun][adj] = self.model.predictedClass(adj, noun)
 		return input_dict
 
-
 def synonyms(word, maxSyns):
 	syns, ants = [], []
 	for syn in Word(word).synsets:
@@ -107,7 +98,6 @@ def synonyms(word, maxSyns):
 
 if __name__ == '__main__':
 	s = mySentence("the man watched the movie")
-	print(s.adjectives)
 
 
 
