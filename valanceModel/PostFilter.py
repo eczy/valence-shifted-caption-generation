@@ -42,7 +42,7 @@ class PostFilter:
 					rowCount += 1
 					continue
 
-				word = row[0]
+				word = row[0].lower()
 				subInformation = {'hostile': True if row[4] else False,
 									'strong': True if row[5] else False,
 									'power': True if row[6] else False,
@@ -65,77 +65,99 @@ class PostFilter:
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
 	def filter(self, sentence, pos=False, neg=False, union=False, intersection=False):
 		s = mySentence(sentence)
-		adjectives = s.adjectives
-		adverbs = s.adjverbs
+		candidateAdjectives = {}
+		candidateAdverbs = {}
+		for noun in s.adjectives:
+			if pos:
+				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._positiveWords]))
+			if neg:
+				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._negativeWords]))
 
-		if pos:
-			commonAdjectives = set([a for a in adjectives if a in self._positiveWords])
-			commonAdverbs = set([a for a in adverbs if a in self._positiveWords])
-		if neg:
-			commonAdjectives = set([a for a in adjectives if a in self._negativeWords])
-			commonAdverbs = set([a for a in adverbs if a in self._negativeWords])
 
-		if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
-			randAdj = np.random.randint(0,len(commonAdjectives))
-			randAdv = np.random.randint(0,len(commonAdverbs))
-			return commonAdjectives[randAdj], commonAdverbs[randAdv]
+			if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
+				randAdj = np.random.randint(0,len(commonAdjectives))
+				candidateAdjectives[noun] = commonAdjectives[randAdj]
+			else:
+				filters = []
+				if self._hostile: filters.append('hostile')
+				if self._strong: filters.append('strong')
+				if self._power: filters.append('power')
+				if self._pain: filters.append('pain')
+				if self._feel: filters.append('feel')
+				if self._emotion: filters.append('emotion')
 
-		filters = []
-		if self._hostile: filters.append('hostile')
-		if self._strong: filters.append('strong')
-		if self._power: filters.append('power')
-		if self._pain: filters.append('pain')
-		if self._feel: filters.append('feel')
-		if self._emotion: filters.append('emotion')
+				filteredAdjectives = []
 
-		filteredAdjectives = []
-		filteredAdverbs = []
+				for adjective in s.adjectives[noun]:
+					if union:
+						if self.inUnion(adjective, filters, pos=pos, neg=neg):
+							filteredAdjectives.append(adjective)
+					elif intersection:
+						if self.inIntersection(adjective, filters, pos=pos, neg=neg):
+							filteredAdjectives.append(adjective)
 
-		for adjective in adjectives:
-			if union:
-				if self.inUnion(adjective, filters, pos=pos, neg=neg):
-					filteredAdjectives.append(adjective)
-			elif intersection:
-				if self.inIntersection(adjective, filters, pos=pos, neg=neg):
-					filteredAdjectives.append(adjective)
+				filteredAdjectives = list(set(filteredAdjectives))
 
-		filteredAdjectives = list(set(filteredAdjectives))
+				randAdj = np.random.randint(0,len(commonAdjectives))
+				candidateAdjectives[noun] = commonAdjectives[randAdj]
 
-		for adverb in adverbs:
-			if union:
-				if self.inUnion(adverb, filters, pos=pos, neg=neg):
-					filteredAdverbs.append(adverb)
-			elif intersection:
-				if self.inIntersection(adverb, filters, pos=pos, neg=neg):
-					filteredAdverbs.append(adverb)
+		for verb in s.adverbs:
+			if pos:
+				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._positiveWords]))
+			if neg:
+				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._negativeWords]))
 
-		filteredAdverbs = list(set(filteredAdverbs))
 
-		randAdj = np.random.randint(0,len(commonAdjectives))
-		randAdv = np.random.randint(0,len(commonAdverbs))
-		return filteredAdjectives[randAdj], filteredAdverbs[randAdv]
+			if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
+				randAdv = np.random.randint(0,len(commonAdverbs))
+				candidateAdverbs[verb] = commonAdverbs[randAdv]
+			else:
+				filters = []
+				if self._hostile: filters.append('hostile')
+				if self._strong: filters.append('strong')
+				if self._power: filters.append('power')
+				if self._pain: filters.append('pain')
+				if self._feel: filters.append('feel')
+				if self._emotion: filters.append('emotion')
+
+				filteredAdverbs = []
+
+				for adverb in s.adverbs[verb]:
+					if union:
+						if self.inUnion(adverb, filters, pos=pos, neg=neg):
+							filteredAdverbs.append(adverb)
+					elif intersection:
+						if self.inIntersection(adverb, filters, pos=pos, neg=neg):
+							filteredAdverbs.append(adverb)
+
+				filteredAdverbs = list(set(filteredAdverbs))
+
+				randAdv = np.random.randint(0,len(commonAdverbs))
+				candidateAdverbs[verb] = commonAdverbs[randAdv]
+
+		return candidateAdjectives, candidateAdverbs
 
 	def inUnion(self, word, filters, pos=True, neg=True):
 		if pos:
 			for f in filters:
-				if self._positiveWords[word][f]:
+				if self._positiveWords[word.upper()][f]:
 					return True
 			return False
 		if neg:
 			for f in filters:
-				if self._negativeWords[word][f]:
+				if self._negativeWords[word.upper()][f]:
 					return True
 			return False
 
 	def inIntersection(self, word, filters, pos=True, neg=True):
 		if pos:
 			for f in filters:
-				if not self._positiveWords[word][f]:
+				if not self._positiveWords[word.upper()][f]:
 					return False
 			return True
 		if neg:
 			for f in filters:
-				if not self._negativeWords[word][f]:
+				if not self._negativeWords[word.upper()][f]:
 					return False
 			return True
 
@@ -145,5 +167,5 @@ class PostFilter:
 
 if __name__ == '__main__':
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter('the man watched the movie')
+	adj, adv = filteredAdjectivesAndAdverbs.filter('the man watched the movie', pos=True, union=True)
 	print(adj, adv)
