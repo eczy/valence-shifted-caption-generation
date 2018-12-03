@@ -77,7 +77,7 @@ class mySentence:
 
 	def possibleReplacements(self, possible):
 		possible_sorted = sorted([(possible[k],k) for k in possible], key=lambda x:x[0], reverse=True)
-		chosen = sample(range(0, min(self.numPossible, len(possible_sorted))), self.numChosen)
+		chosen = sample(range(0, min(self.numPossible, len(possible_sorted))), min(self.numChosen, len(possible_sorted)))
 		final = set(possible_sorted[i][1] for i in chosen)
 		for a in chosen:
 			final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
