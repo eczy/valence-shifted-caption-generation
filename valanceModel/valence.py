@@ -5,6 +5,7 @@ import json
 import numpy as np
 from random import randint, sample
 
+
 # Expect dictionary of bigram counts for NN-JJ / ADV-VB
 # Expect a model that takes in pairs as input and outputs
 # valence rank.
@@ -93,13 +94,12 @@ def synonyms(word, maxSyns):
 	for syn in Word(word).synsets:
 		for l in syn.lemmas():
 			syns.append(l.name())
-			# if l.antonyms():
-			# 	ants.append(l.antonyms()[0].name())
-	return [syns[i] for i in sample(range(0, len(syns)), min(maxSyns, len(syns)))]
-
-if __name__ == '__main__':
-	s = mySentence("the man watched the movie")
-
+			if l.antonyms():
+				ants.append(l.antonyms()[0].name())
+	final = [syns[i] for i in sample(range(0, len(syns)), min(maxSyns, len(syns)))]
+	for ant in ants:
+		final.append(ant)
+	return final
 
 
 
