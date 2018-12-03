@@ -26,6 +26,12 @@ def getTrainSentenceTuples():
     # full learning set is too large for memory, break it up by 5000 tuples
     fileCount = 0
 
+    # notify the users how the data will be grouped
+    if "-categories" in sys.argv:
+        print("Grouping sentiments into 5 categories.")
+    else:
+        print("Grouping sentiments by float score.")
+
     for f in allTrainFiles:
         with open(f, 'r') as inFile:
             # print("Opening " + f + " - length = " + str(len(trainData)))
@@ -166,7 +172,24 @@ def convert10PointScaleTo1Point(score):
         score = score - 6
     else:
         score = score - 5
-    return score/5
+
+    score = score/5
+
+    if "-categories" in sys.argv:
+        cat = ""
+        if score <= -0.7:
+            cat = "vNeg"
+        elif score < 0.0:
+            cat = "pNeg"
+        elif score == 0.0:
+            cat = "neut"
+        elif score <= 0.7:
+            cat = "pPos"
+        elif score <= 1.0:
+            cat = "vPos"
+        return cat
+    else:
+        return score
 
 
 
@@ -280,9 +303,16 @@ def getTrainCounts():
     finalMap["verbAdvCount"] = verbAdvCount_map
 
 
+    import pdb; pdb.set_trace()
+
     # save the counts
-    with open('trainCounts_imdb.pkl', 'wb') as trainCountsFile:
-        pickle.dump(finalMap, trainCountsFile)
+    # if the data is broken into sentiment categories, save to different file
+    if "vNeg" in finalMap["classCounts"].keys():
+        with open('trainCounts_cats_imdb.pkl', 'wb') as trainCountsFile:
+            pickle.dump(finalMap, trainCountsFile)
+    else:
+        with open('trainCounts_imdb.pkl', 'wb') as trainCountsFile:
+            pickle.dump(finalMap, trainCountsFile)
 
 
 
