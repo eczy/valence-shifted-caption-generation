@@ -303,6 +303,8 @@ def getTrainCounts():
     finalMap["verbAdvCount"] = verbAdvCount_map
 
 
+    import pdb; pdb.set_trace()
+
     # save the counts
     # if the data is broken into sentiment categories, save to different file
     if "vNeg" in finalMap["classCounts"].keys():
