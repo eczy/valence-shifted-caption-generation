@@ -5,11 +5,7 @@ from valence import mySentence
 import pickle
 
 class PostFilter:
-	_totalWords = 0
-	_positiveCount = 0
-	_negativeCount = 0
-	_positiveWords = {}
-	_negativeWords = {}
+	_words = {}
 	_hostile = False
 	_strong = False
 	_power = False
@@ -17,6 +13,7 @@ class PostFilter:
 	_feel = False
 	_emotion = False
 	_filter = False
+	_filters = ['hostile', 'strong', 'power', 'pain', 'feel', 'emotion']
 
 	# Creates a post filter object with certain sets of filters
 	def __init__(self, hostile=False, strong=False, power=False, pain=False, feel=False, emotion=False):
@@ -36,28 +33,14 @@ class PostFilter:
 
 	def loadGeneralInquirerLexicon(self, filename):
 		generalInquirerLexicon = pickle.load(open(filename, 'rb'))
-		self._positiveWords = generalInquirerLexicon['positiveWords']
-		self._negativeWords = generalInquirerLexicon['negativeWords']
-		self._totalWords = generalInquirerLexicon['totalWords']
-		self._positiveCount = generalInquirerLexicon['positiveCount']
-		self._negativeCount = generalInquirerLexicon['negativeCount']
+		self._words = generalInquirerLexicon['words']
 		print("Finished Loading General Inquirer Lexicon")
 
 	# Internal function that parses the GIL csv and tags words with certain categories
 	def parseGeneralInquirerLexicon(self, filename):
 		with open(filename, 'r') as csvfile:
 			csvReader = csv.reader(csvfile, delimiter=',')
-
-			rowCount = 0
-			negCount = 0
-			posCount = 0
-
 			for row in csvReader:
-				rowCount += 1
-				if rowCount == 1:
-					rowCount += 1
-					continue
-
 				word = row[0].lower()
 				subInformation = {'hostile': True if row[4] else False,
 									'strong': True if row[5] else False,
@@ -67,134 +50,94 @@ class PostFilter:
 									'emotion': True if row[12] else False
 								}
 
-				if row[1] == 'Positiv':
-					self._positiveWords[word] = {}
-					for key in subInformation:
-						self._positiveWords[word][key] = subInformation[key]
-					posCount += 1
-				else:
-					self._negativeWords[word] = {}
-					for key in subInformation:
-						self._negativeWords[word][key] = subInformation[key]
-					negCount += 1
+				self._words[word] = {}
+				for key in subInformation:
+					self._words[word][key] = subInformation[key]
 
-			self._totalWords = rowCount
-			self._positiveCount = posCount
-			self._negativeCount = negCount
+
 			generalInquirerLexicon = {}
-			generalInquirerLexicon['positiveWords'] = self._positiveWords
-			generalInquirerLexicon['negativeWords'] = self._negativeWords
-			generalInquirerLexicon['totalWords'] = rowCount
-			generalInquirerLexicon['positiveCount'] = posCount
-			generalInquirerLexicon['negativeCount'] = negCount
+			generalInquirerLexicon['words'] = self._words
 			pickle.dump(generalInquirerLexicon, open('generalInquirerLexicon.pkl', 'wb'))
 			print("Finished Parsing General Inquirer Lexicon")
 
+	def subClassWords(self, candidateDict):
+		valenceDict = {}
+		valenceDict['vNeg'] = []
+		valenceDict['pNeg'] = []
+		valenceDict['neut'] = []
+		valenceDict['pPos'] = []
+		valenceDict['vPos'] = []
+
+		for item in candidateDict:
+			word = item[0]
+			valence = float(item[1])
+			print((word, valence))
+			if valence <= -0.5: valenceDict['vNeg'].append(word)
+			elif valence < 0.0: valenceDict['pNeg'].append(word)
+			elif valence == 0.0: valenceDict['neut'].append(word)
+			elif valence < 0.5: valenceDict['pPos'].append(word)
+			else: valenceDict['vPos'].append(word)
+
+		return valenceDict
 
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
-	def filter(self, sentence, pos=False, neg=False, union=False, intersection=False):
+	def filter(self, sentence, union=True, intersection=False):
 		s = mySentence(sentence)
 		candidateAdjectives = {}
 		candidateAdverbs = {}
 		for noun in s.adjectives:
-			if pos:
-				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._positiveWords and s.adjectives[noun][a] > 0.0]))
-			if neg:
-				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._negativeWords and s.adjectives[noun][a] < 0.0]))
-
-			if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
-				randAdj = np.random.randint(0,len(commonAdjectives))
-				candidateAdjectives[noun] = commonAdjectives[randAdj]
+			commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
+			# No Filters set, break up candidates by valence class
+			if not self._filter:
+				candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
 			else:
-				filters = []
-				if self._hostile: filters.append('hostile')
-				if self._strong: filters.append('strong')
-				if self._power: filters.append('power')
-				if self._pain: filters.append('pain')
-				if self._feel: filters.append('feel')
-				if self._emotion: filters.append('emotion')
-
-				filteredAdjectives = []
-
-				for adjective in s.adjectives[noun]:
+				filteredAdjectives = {}
+				for pair in commonAdjectives:
 					if union:
-						if self.inUnion(adjective, filters, pos=pos, neg=neg):
-							filteredAdjectives.append(adjective)
+						if self.inUnion(pair[0]):
+							filteredAdjectives[pair[0]] = pair[1]
 					elif intersection:
-						if self.inIntersection(adjective, filters, pos=pos, neg=neg):
-							filteredAdjectives.append(adjective)
+						if self.inIntersection(pair[0]):
+							filteredAdjectives[pair[0]] = pair[1]
 
-				filteredAdjectives = list(set(filteredAdjectives))
+				candidateAdjectives[noun] = self.subClassWords(filteredAdjectives)
 
-				randAdj = np.random.randint(0,len(commonAdjectives))
-				candidateAdjectives[noun] = commonAdjectives[randAdj]
+
 
 		for verb in s.adverbs:
-			print(s.adverbs[verb])
-			if pos:
-				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._positiveWords and s.adverbs[verb][a] > 0.0]))
-			if neg:
-				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._negativeWords and s.adverbs[verb][a] < 0.0]))
-
-
-			if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
-				randAdv = np.random.randint(0,len(commonAdverbs))
-				candidateAdverbs[verb] = commonAdverbs[randAdv]
+			commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
+			# No Filters set, break up candidates by valence class
+			if not self._filter:
+				candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
 			else:
-				filters = []
-				if self._hostile: filters.append('hostile')
-				if self._strong: filters.append('strong')
-				if self._power: filters.append('power')
-				if self._pain: filters.append('pain')
-				if self._feel: filters.append('feel')
-				if self._emotion: filters.append('emotion')
-
-				filteredAdverbs = []
-
-				for adverb in s.adverbs[verb]:
+				filteredAdverbs = {}
+				for pair in commonAdverbs:
 					if union:
-						if self.inUnion(adverb, filters, pos=pos, neg=neg):
-							filteredAdverbs.append(adverb)
+						if self.inUnion(pair[0]):
+							filteredAdverbs[pair[0]] = pair[1]
 					elif intersection:
-						if self.inIntersection(adverb, filters, pos=pos, neg=neg):
-							filteredAdverbs.append(adverb)
+						if self.inIntersection(pair[0]):
+							filteredAdverbs[pair[0]] = pair[1]
 
-				filteredAdverbs = list(set(filteredAdverbs))
-
-				randAdv = np.random.randint(0,len(commonAdverbs))
-				candidateAdverbs[verb] = commonAdverbs[randAdv]
+				candidateAdverbs[verb] = self.subClassWords(filteredAdverbs)
 
 		return candidateAdjectives, candidateAdverbs
 
-	def inUnion(self, word, filters, pos=True, neg=True):
-		if pos:
-			for f in filters:
-				if self._positiveWords[word.upper()][f]:
-					return True
-			return False
-		if neg:
-			for f in filters:
-				if self._negativeWords[word.upper()][f]:
-					return True
-			return False
+	def inUnion(self, word):
+		for f in self._filters:
+			if self._words[word.upper()][f]:
+				return True
+		return False
+
 
 	def inIntersection(self, word, filters, pos=True, neg=True):
-		if pos:
-			for f in filters:
-				if not self._positiveWords[word.upper()][f]:
-					return False
-			return True
-		if neg:
-			for f in filters:
-				if not self._negativeWords[word.upper()][f]:
-					return False
-			return True
-
-
-
+		for f in self._filters:
+			if not self._words[word.upper()][f]:
+				return False
+		return True
 
 
 if __name__ == '__main__':
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter('the person walks', neg=True, union=True)
+	adj, adv = filteredAdjectivesAndAdverbs.filter('the person walks')
 	print(adj, adv)
