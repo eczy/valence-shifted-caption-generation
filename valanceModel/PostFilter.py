@@ -2,6 +2,7 @@ import csv
 import os
 import numpy as np
 from valence import mySentence
+import pickle
 
 class PostFilter:
 	_totalWords = 0
@@ -15,6 +16,7 @@ class PostFilter:
 	_pain = False
 	_feel = False
 	_emotion = False
+	_filter = False
 
 	# Creates a post filter object with certain sets of filters
 	def __init__(self, hostile=False, strong=False, power=False, pain=False, feel=False, emotion=False):
@@ -24,8 +26,22 @@ class PostFilter:
 		self._pain = pain
 		self._feel = feel
 		self._emotion = emotion
-		if not os.path.exists(os.getcwd() + '/genaralInquirerLexicon.pkl'):
+		# Check to see if any filtering needs to be done
+		if self._hostile or self._strong or self._power or self._pain or self._feel or self._emotion:
+			self._filter = True
+		if not os.path.exists(os.getcwd() + '/generalInquirerLexicon.pkl'):
 			self.parseGeneralInquirerLexicon('inquirerbasic.csv')
+		else:
+			self.loadGeneralInquirerLexicon(os.getcwd() + '/generalInquirerLexicon.pkl')
+
+	def loadGeneralInquirerLexicon(self, filename):
+		generalInquirerLexicon = pickle.load(open(filename, 'rb'))
+		self._positiveWords = generalInquirerLexicon['positiveWords']
+		self._negativeWords = generalInquirerLexicon['negativeWords']
+		self._totalWords = generalInquirerLexicon['totalWords']
+		self._positiveCount = generalInquirerLexicon['positiveCount']
+		self._negativeCount = generalInquirerLexicon['negativeCount']
+		print("Finished Loading General Inquirer Lexicon")
 
 	# Internal function that parses the GIL csv and tags words with certain categories
 	def parseGeneralInquirerLexicon(self, filename):
@@ -61,6 +77,19 @@ class PostFilter:
 					for key in subInformation:
 						self._negativeWords[word][key] = subInformation[key]
 					negCount += 1
+
+			self._totalWords = rowCount
+			self._positiveCount = posCount
+			self._negativeCount = negCount
+			generalInquirerLexicon = {}
+			generalInquirerLexicon['positiveWords'] = self._positiveWords
+			generalInquirerLexicon['negativeWords'] = self._negativeWords
+			generalInquirerLexicon['totalWords'] = rowCount
+			generalInquirerLexicon['positiveCount'] = posCount
+			generalInquirerLexicon['negativeCount'] = negCount
+			pickle.dump(generalInquirerLexicon, open('generalInquirerLexicon.pkl', 'wb'))
+			print("Finished Parsing General Inquirer Lexicon")
+
 
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
 	def filter(self, sentence, pos=False, neg=False, union=False, intersection=False):
@@ -167,5 +196,5 @@ class PostFilter:
 
 if __name__ == '__main__':
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter('the person walks', pos=True, union=True)
+	adj, adv = filteredAdjectivesAndAdverbs.filter('the person walks', neg=True, union=True)
 	print(adj, adv)
