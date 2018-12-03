@@ -6,7 +6,7 @@ def main():
 
 	caption = "I ran to the park to play with my friend"
 
-	filteredAdjectivesAndAdverbs = PF.PostFilter()
+	filteredAdjectivesAndAdverbs = PF()
 
 	adj, adv = filteredAdjectivesAndAdverbs.filter(caption)
 
@@ -15,19 +15,22 @@ def main():
 		outputCategories.update([k1 for k1 in v.keys()])
 
 	output = generateOutput(caption, adj, adv, list(outputCategories))
+	print(output)
+	print(outputCategories)
 
 def generateOutput(caption, adj, adv, outputCategories):
 	allOutputs = []
-	myCaption = mySentence.mySentence(caption)
+	myCaption = mySentence(caption)
 	for outputType in outputCategories:
 		output = ""
 		space = " "
 		for word, lemma in zip(myCaption.words, myCaption.lemmas):
 			if lemma in myCaption.nouns:
-				output += adj[lemma][outputType] + space
-			elif lemma in myCaption.verbs:
-				output += adv[lemma][outputType] + space
-			output += word + space
+				print(adj[lemma])
+				output = output + adj[lemma][outputType] + space
+			# elif lemma in myCaption.verbs:
+			# 	output = output + adv[lemma][outputType] + space
+			output = output + word + space
 		allOutputs.append(output)
 	return allOutputs
 

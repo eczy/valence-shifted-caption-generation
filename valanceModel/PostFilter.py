@@ -78,6 +78,12 @@ class PostFilter:
 			elif valence < 0.5: valenceDict['pPos'].append(word)
 			else: valenceDict['vPos'].append(word)
 
+		for key in valenceDict:
+			if len(valenceDict[key]) > 0:
+				randNum = np.random.randint(0, len(valenceDict[key]))
+				valenceDict[key] = valenceDict[key][randNum]	
+			else:
+				valenceDict[key] = ''
 		return valenceDict
 
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
