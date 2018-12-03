@@ -69,10 +69,9 @@ class PostFilter:
 		candidateAdverbs = {}
 		for noun in s.adjectives:
 			if pos:
-				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._positiveWords]))
+				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._positiveWords and s.adjectives[noun][a] > 0.0]))
 			if neg:
-				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._negativeWords]))
-
+				commonAdjectives = list(set([a for a in s.adjectives[noun] if a.lower() in self._negativeWords and s.adjectives[noun][a] < 0.0]))
 
 			if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
 				randAdj = np.random.randint(0,len(commonAdjectives))
@@ -102,10 +101,11 @@ class PostFilter:
 				candidateAdjectives[noun] = commonAdjectives[randAdj]
 
 		for verb in s.adverbs:
+			print(s.adverbs[verb])
 			if pos:
-				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._positiveWords]))
+				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._positiveWords and s.adverbs[verb][a] > 0.0]))
 			if neg:
-				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._negativeWords]))
+				commonAdverbs = list(set([a for a in s.adverbs[verb] if a.lower() in self._negativeWords and s.adverbs[verb][a] < 0.0]))
 
 
 			if not self._hostile and not self._strong and not self._power and not self._pain and not self._feel and not self._emotion:
@@ -167,5 +167,5 @@ class PostFilter:
 
 if __name__ == '__main__':
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter('the man watched the movie', pos=True, union=True)
+	adj, adv = filteredAdjectivesAndAdverbs.filter('the person walks', pos=True, union=True)
 	print(adj, adv)
