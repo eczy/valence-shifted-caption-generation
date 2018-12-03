@@ -21,6 +21,13 @@ def convertSentFloatToClass(sentFloat):
         print("Illegal sentiment float value seen." + str(sentFloat))
         return "ERROR"
 
+def convert5ClassTo3Class(aClass):
+    if aClass == "vNeg" or aClass == "pNeg":
+        return "neg"
+    if aClass == "vPos" or aClass == "pPos":
+        return "pos"
+    if aClass == "neut":
+        return "neut"
 
 if __name__ == '__main__':
     # load the caption + desired valance tuples
@@ -51,7 +58,9 @@ if __name__ == '__main__':
         classPredCounts[actualSentimentClass] += 1
 
         # increment correct counts if correct
-        if desiredSentimentClass == actualSentimentClass:
+        # correct here meaning just it is negative, positve, or neutral
+        if convert5ClassTo3Class(desiredSentimentClass)\
+               == convert5ClassTo3Class(actualSentimentClass):
             predCount_correct += 1
             classPredCounts_correct[actualSentimentClass] += 1
 

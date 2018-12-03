@@ -5,6 +5,7 @@ import json
 import numpy as np
 from random import randint, sample
 
+
 # Expect dictionary of bigram counts for NN-JJ / ADV-VB
 # Expect a model that takes in pairs as input and outputs
 # valence rank.
@@ -42,7 +43,7 @@ class mySentence:
 		self.adverbs = self.getAdverbs()
 
 	def readSentence(self, sentence):
-		nlp = StanfordCoreNLP('http://localhost', port=9000, timeout=30000)
+		nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 		output = json.loads(nlp.annotate(sentence, properties = {
 			"annotators": "tokenize,ssplit,parse,sentiment,lemma",
 			"outputFormat": "json",
@@ -76,7 +77,7 @@ class mySentence:
 
 	def possibleReplacements(self, possible):
 		possible_sorted = sorted([(possible[k],k) for k in possible], key=lambda x:x[0], reverse=True)
-		chosen = sample(range(0, min(self.numPossible, len(possible_sorted))), self.numChosen)
+		chosen = sample(range(0, min(self.numPossible, len(possible_sorted))), min(self.numChosen, len(possible_sorted)))
 		final = set(possible_sorted[i][1] for i in chosen)
 		for a in chosen:
 			final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
@@ -93,13 +94,12 @@ def synonyms(word, maxSyns):
 	for syn in Word(word).synsets:
 		for l in syn.lemmas():
 			syns.append(l.name())
-			# if l.antonyms():
-			# 	ants.append(l.antonyms()[0].name())
-	return [syns[i] for i in sample(range(0, len(syns)), min(maxSyns, len(syns)))]
-
-if __name__ == '__main__':
-	s = mySentence("the man watched the movie")
-
+			if l.antonyms():
+				ants.append(l.antonyms()[0].name())
+	final = [syns[i] for i in sample(range(0, len(syns)), min(maxSyns, len(syns)))]
+	for ant in ants:
+		final.append(ant)
+	return final
 
 
 
