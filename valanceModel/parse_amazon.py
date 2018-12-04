@@ -77,6 +77,9 @@ def convert5PointScaleTo1Point(floatSent):
 
 def getTrainPairTuples():
 
+    # list of tuples (pairType, word0, word1, sentiment) for all pairs in all reviews
+    allPairsWithSentiments = []
+
     for tupInFile in os.listdir(amazonSentenceTupDir):
         # load the sentence tuples
         with open(amazonSentenceTupDir+"/"+tupInFile, 'rb') as trainTuplesIn:
