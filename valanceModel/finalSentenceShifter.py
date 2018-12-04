@@ -8,7 +8,7 @@ import os
 
 def main():
 
-	captionListFile = os.getcwd() + '/../captionList.pkl'
+	captionListFile = os.getcwd() + '/../Image-Captioning/test_captions.p'
 	captionList = pickle.load(open(captionListFile, 'rb'))
 	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbs.txt'
 	postFilter = PF()
