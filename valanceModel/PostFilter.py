@@ -71,7 +71,6 @@ class PostFilter:
 		for item in candidateDict:
 			word = item[0]
 			valence = float(item[1])
-			print((word, valence))
 			if valence <= -0.5: valenceDict['vNeg'].append(word)
 			elif valence < 0.0: valenceDict['pNeg'].append(word)
 			elif valence == 0.0: valenceDict['neut'].append(word)
@@ -145,5 +144,5 @@ class PostFilter:
 
 if __name__ == '__main__':
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter('the person walks')
+	adj, adv = filteredAdjectivesAndAdverbs.filter(mySentence('the person walks'))
 	print(adj, adv)
