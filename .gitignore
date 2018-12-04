@@ -6,3 +6,4 @@ venv/*
 
 valanceModel/amazonRawData
 valanceModel/amazon_sentenceTuples/
+valanceModel/evan_amaz_sentTuples.tar.gz

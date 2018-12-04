@@ -114,7 +114,7 @@ def getTrainPairTuples():
         nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
         # save the review pair tuples
-        with open('trainPairTuples_imdb.pkl', 'wb') as trainPairsDataFile:
+        with open('trainPairTuples_amazon_'+tupInFile+'.pkl', 'wb') as trainPairsDataFile:
             pickle.dump(allPairsWithSentiments, trainPairsDataFile)
 
 
