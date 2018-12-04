@@ -37,7 +37,24 @@ def main():
 					f.write('{}: {}\n'.format(category, sentence))
 	nlp.close()
 
-def generateOutput(caption, adj, adv, outputCategories, nlp):
+def individualSentenceGeneration(caption):
+	postFilter = PF()
+	try:
+		adj, adv = postFilter.filter(caption)
+	except KeyError:
+		print("Unable to generate caption")
+		return
+
+	outputCategories = set()
+	for k, v in adj.items():
+		outputCategories.update([k1 for k1 in v.keys()])
+
+	output = generateOutput(caption, adj, adv, list(outputCategories))
+	for category, sentence in zip(outputCategories, output):
+		print('{}: {}\n'.format(category, sentence))
+	return
+
+def generateOutput(caption, adj, adv, outputCategories):
 	allOutputs = []
 	myCaption = mySentence(caption, nlp)
 	for outputType in outputCategories:
