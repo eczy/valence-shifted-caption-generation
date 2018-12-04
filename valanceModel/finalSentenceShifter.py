@@ -1,6 +1,7 @@
 from valence import mySentence
 from PostFilter import PostFilter as PF
 import progressbar
+from stanfordcorenlp import StanfordCoreNLP
 import pickle
 import os
 
@@ -12,12 +13,14 @@ def main():
 	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbs.txt'
 	postFilter = PF()
 	numCaptions = len(captionList)
+	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
+	count = 0
 	with open(outFile, 'w') as f:
 		print("Starting Caption Generation with Sentiment")
 		with progressbar.ProgressBar(max_limit=numCaptions) as bar:
 			for caption in captionList:
 				try:
-					adj, adv = postFilter.filter(caption)
+					adj, adv = postFilter.filter(caption, nlp)
 				except KeyError:
 					continue
 				
@@ -32,6 +35,7 @@ def main():
 				f.write(caption + '\n')
 				for category, sentence in zip(outputCategories, output):
 					f.write('{}: {}\n'.format(category, sentence))
+	nlp.close()
 
 def generateOutput(caption, adj, adv, outputCategories):
 	allOutputs = []

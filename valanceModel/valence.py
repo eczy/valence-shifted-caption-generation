@@ -22,11 +22,11 @@ NOUN_TAGS = ['NN', 'NNS']
 VERB_TAGS = ['VB','VBD','VBN','VBG','VBP','VBZ']
 
 class mySentence:
-	def __init__(self, sentence):
+	def __init__(self, sentence, nlp):
 
 		self.model = NBM.sentimentModel()
 		self.words, self.lemmas, self.tags = [], [], []
-		self.readSentence(sentence)
+		self.readSentence(sentence, nlp)
 
 		# numPossible represents the top n words taken from the corpus, of which
 		# we will choose numChosen of them for possible replacement words.
@@ -42,8 +42,8 @@ class mySentence:
 		self.adjectives = self.getAdjectives()
 		self.adverbs = self.getAdverbs()
 
-	def readSentence(self, sentence):
-		nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
+	def readSentence(self, sentence, nlp):
+		#nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 		output = json.loads(nlp.annotate(sentence, properties = {
 			"annotators": "tokenize,ssplit,parse,sentiment,lemma",
 			"outputFormat": "json",
@@ -57,7 +57,7 @@ class mySentence:
 				self.words.append(d['word'])
 				self.tags.append(d['pos'])
 
-		nlp.close()
+		#nlp.close()
 		return
 
 	def getAdjectives(self):

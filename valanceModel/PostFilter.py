@@ -86,8 +86,8 @@ class PostFilter:
 		return valenceDict
 
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
-	def filter(self, sentence, union=True, intersection=False):
-		s = mySentence(sentence)
+	def filter(self, sentence, nlp, union=True, intersection=False):
+		s = mySentence(sentence, nlp)
 		candidateAdjectives = {}
 		candidateAdverbs = {}
 		for noun in s.adjectives:
