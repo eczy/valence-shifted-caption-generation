@@ -44,7 +44,7 @@ def main():
 
 def individualSentenceGeneration(caption):
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
-	postFilter = PF(dataset='opinion')
+	postFilter = PF()
 	try:
 		adj, adv = postFilter.filter(caption, nlp)
 	except KeyError:

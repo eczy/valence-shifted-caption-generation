@@ -109,12 +109,10 @@ class PostFilter:
 		valenceDict['pos'] = []
 		valenceDict['neut'] = []
 		valenceDict['neg'] = []
-
 		for item in candidateDict:
 			word = item[0]
 			valenceClass = item[1]
 			valenceDict[valenceClass].append(word)
-		print(valenceDict)
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
 				randNum = np.random.randint(0, len(valenceDict[key]))
@@ -151,7 +149,7 @@ class PostFilter:
 
 		for verb in s.adverbs:
 			if self._opinion:
-				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a, s.adjectives[noun][a])]))
+				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a, s.adverbs[verb][a])]))
 				candidateAdverbs[noun] = self.subClassWords(candidateAdverbs)
 			elif self._GIL:
 				commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
@@ -169,7 +167,6 @@ class PostFilter:
 								filteredAdverbs[pair[0]] = pair[1]
 
 					candidateAdverbs[verb] = self.subClassWords(filteredAdverbs)
-
 		return candidateAdjectives, candidateAdverbs
 
 	def inUnion(self, word):
