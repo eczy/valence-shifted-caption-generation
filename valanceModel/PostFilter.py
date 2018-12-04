@@ -70,12 +70,8 @@ class PostFilter:
 
 		for item in candidateDict:
 			word = item[0]
-			valence = float(item[1])
-			if valence <= -0.5: valenceDict['vNeg'].append(word)
-			elif valence < 0.0: valenceDict['pNeg'].append(word)
-			elif valence == 0.0: valenceDict['neut'].append(word)
-			elif valence < 0.5: valenceDict['pPos'].append(word)
-			else: valenceDict['vPos'].append(word)
+			valenceClass = item[1]
+			valenceDict[valenceClass].append(word)
 
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
@@ -86,8 +82,8 @@ class PostFilter:
 		return valenceDict
 
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
-	def filter(self, sentence, union=True, intersection=False):
-		s = mySentence(sentence)
+	def filter(self, sentence, nlp, union=True, intersection=False):
+		s = mySentence(sentence, nlp)
 		candidateAdjectives = {}
 		candidateAdverbs = {}
 		for noun in s.adjectives:
