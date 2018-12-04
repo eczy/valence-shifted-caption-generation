@@ -2,7 +2,9 @@ import csv
 import os
 import numpy as np
 from valence import mySentence
+from stanfordcorenlp import StanfordCoreNLP
 import pickle
+import re
 
 class PostFilter:
 	_words = {}
@@ -62,17 +64,15 @@ class PostFilter:
 
 	def subClassWords(self, candidateDict):
 		valenceDict = {}
-		valenceDict['vNeg'] = []
-		valenceDict['pNeg'] = []
+		valenceDict['pos'] = []
 		valenceDict['neut'] = []
-		valenceDict['pPos'] = []
-		valenceDict['vPos'] = []
+		valenceDict['neg'] = []
 
 		for item in candidateDict:
 			word = item[0]
 			valenceClass = item[1]
 			valenceDict[valenceClass].append(word)
-
+		print(valenceDict)
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
 				randNum = np.random.randint(0, len(valenceDict[key]))
@@ -87,7 +87,8 @@ class PostFilter:
 		candidateAdjectives = {}
 		candidateAdverbs = {}
 		for noun in s.adjectives:
-			commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
+			commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if isFine(a)]))
+			# commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
 			# No Filters set, break up candidates by valence class
 			if not self._filter:
 				candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
@@ -106,7 +107,8 @@ class PostFilter:
 
 
 		for verb in s.adverbs:
-			commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
+			commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if isFine(a)]))
+			# commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
 			# No Filters set, break up candidates by valence class
 			if not self._filter:
 				candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
@@ -137,8 +139,16 @@ class PostFilter:
 				return False
 		return True
 
+def isFine(s):
+	regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+	if regex.search(s) is None:
+		return True
+	return False
+
 
 if __name__ == '__main__':
+	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter(mySentence('the person walks'))
+	adj, adv = filteredAdjectivesAndAdverbs.filter('There is a knife room', nlp)
+	nlp.close()
 	print(adj, adv)
