@@ -12,8 +12,6 @@ def main():
 	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbs.txt'
 	postFilter = PF()
 	numCaptions = len(captionList)
-	count = 0.0
-	percentCount = 0.0
 	with open(outFile, 'w') as f:
 		print("Starting Caption Generation with Sentiment")
 		with progressbar.ProgressBar(max_limit=numCaptions) as bar:
@@ -23,9 +21,6 @@ def main():
 				except KeyError:
 					continue
 				
-				if count >= percentCount * numCaptions:
-					print("Finished {} of captions".format(percentCount))
-					percentCount += 0.1
 				bar.update(count)
 				count += 1
 
