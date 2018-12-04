@@ -158,14 +158,14 @@ def getTrainCounts():
         for p in pairTuples:
 
             # - number of times sentiment group occurs (C)
-            sentimentClass = p[3]
+            sentimentClass = convert5CatTo3Cat(p[3])
             if sentimentClass not in classCounts:
                 classCounts[sentimentClass] = 0
             classCounts[sentimentClass] += 1
 
             # - number of times word + sent group occours ( N(f=w_i, C=c_j) )
-            wordSentTup0 = (p[1],p[3])
-            wordSentTup1 = (p[2],p[3])
+            wordSentTup0 = (p[1],convert5CatTo3Cat(p[3]))
+            wordSentTup1 = (p[2],convert5CatTo3Cat(p[3]))
             if wordSentTup0 not in wordClassCount_tupMap:
                 wordClassCount_tupMap[wordSentTup0] = 0
             if wordSentTup1 not in wordClassCount_tupMap:
@@ -229,13 +229,24 @@ def getTrainCounts():
 
     # save the counts
     # if the data is broken into sentiment categories, save to different file
-    if "vNeg" in finalMap["classCounts"].keys():
+    if "vNeg" in finalMap["classCounts"].keys() or "neg" in finalMap["classCounts"].keys():
         with open(amazonCountsDir+"/trainCounts_cats_amazon.pkl", 'wb') as trainCountsFile:
             pickle.dump(finalMap, trainCountsFile)
     else:
         with open(amazonCountsDir+"/trainCounts_amazon.pkl", 'wb') as trainCountsFile:
             pickle.dump(finalMap, trainCountsFile)
 
+
+def convert5CatTo3Cat(cat):
+    if cat == "vNeg" or cat == "pNeg":
+        return "neg"
+    elif cat == "vPos" or cat == "pPos":
+        return "pos"
+    elif cat == "neut":
+        return "neut"
+    else:
+        raise ValueError('An illegal category was seen in the 5cat to 3cat converter.\
+                            cat = '+cat)
 
 
 
