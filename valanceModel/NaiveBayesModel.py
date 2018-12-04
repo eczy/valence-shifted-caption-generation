@@ -33,7 +33,8 @@ class sentimentModel:
     def __init__(self):
         # open the data counts map from the imdb training data
         countsMap = {}
-        with open('trainCounts_imdb.pkl', 'rb') as trainCountsFile:
+        # with open('trainCounts_imdb.pkl', 'rb') as trainCountsFile:
+        with open('amazon_counts/trainCounts_cats_amazon.pkl', 'rb') as trainCountsFile:
             countsMap = pickle.load(trainCountsFile)
 
         self._classCounts_map         = countsMap["classCounts"]
