@@ -1,22 +1,42 @@
 from valence import mySentence
 from PostFilter import PostFilter as PF
+import progressbar
+import pickle
+import os
 
 
 def main():
 
-	caption = "I ran to the park to play with my friend"
+	captionListFile = os.getcwd() + '/../captionList.pkl'
+	captionList = pickle.load(open(captionListFile, 'rb'))
+	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbs.txt'
+	postFilter = PF()
+	numCaptions = len(captionList)
+	count = 0.0
+	percentCount = 0.0
+	with open(outFile, 'w') as f:
+		print("Starting Caption Generation with Sentiment")
+		with progressbar.ProgressBar(max_limit=numCaptions) as bar:
+			for caption in captionList:
+				try:
+					adj, adv = postFilter.filter(caption)
+				except KeyError:
+					continue
+				
+				if count >= percentCount * numCaptions:
+					print("Finished {} of captions".format(percentCount))
+					percentCount += 0.1
+				bar.update(count)
+				count += 1
 
-	filteredAdjectivesAndAdverbs = PF()
+				outputCategories = set()
+				for k, v in adj.items():
+					outputCategories.update([k1 for k1 in v.keys()])
 
-	adj, adv = filteredAdjectivesAndAdverbs.filter(caption)
-
-	outputCategories = set()
-	for k, v in adj.items():
-		outputCategories.update([k1 for k1 in v.keys()])
-
-	output = generateOutput(caption, adj, adv, list(outputCategories))
-	print(output)
-	print(outputCategories)
+				output = generateOutput(caption, adj, adv, list(outputCategories))
+				f.write(caption + '\n')
+				for category, sentence in zip(outputCategories, output):
+					f.write('{}: {}\n'.format(category, sentence))
 
 def generateOutput(caption, adj, adv, outputCategories):
 	allOutputs = []
@@ -26,7 +46,6 @@ def generateOutput(caption, adj, adv, outputCategories):
 		space = " "
 		for word, lemma in zip(myCaption.words, myCaption.lemmas):
 			if lemma in myCaption.nouns:
-				print(adj[lemma])
 				output = output + adj[lemma][outputType] + space
 			# elif lemma in myCaption.verbs:
 			# 	output = output + adv[lemma][outputType] + space

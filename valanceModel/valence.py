@@ -56,6 +56,7 @@ class mySentence:
 				self.lemmas.append(d['lemma'])
 				self.words.append(d['word'])
 				self.tags.append(d['pos'])
+
 		nlp.close()
 		return
 
@@ -88,6 +89,7 @@ class mySentence:
 			for adj in input_dict[noun]:
 				input_dict[noun][adj] = self.model.predictedClass(adj, noun)
 		return input_dict
+	
 
 def synonyms(word, maxSyns):
 	syns, ants = [], []
