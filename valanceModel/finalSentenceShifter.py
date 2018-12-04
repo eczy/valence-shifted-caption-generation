@@ -12,13 +12,15 @@ def main():
 	captionList = pickle.load(open(captionListFile, 'rb'))
 	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbs.txt'
 	postFilter = PF()
-	numCaptions = len(captionList)
+	numCaptions = len(captionList.keys())
+	newCaptionDict = {k:{} for k in captionList}
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	count = 0
 	with open(outFile, 'w') as f:
 		print("Starting Caption Generation with Sentiment")
 		with progressbar.ProgressBar(max_limit=numCaptions) as bar:
-			for caption in captionList:
+			for image in captionList:
+				caption = captionList[image]
 				try:
 					adj, adv = postFilter.filter(caption, nlp)
 				except KeyError:
@@ -35,9 +37,12 @@ def main():
 				f.write(caption + '\n')
 				for category, sentence in zip(outputCategories, output):
 					f.write('{}: {}\n'.format(category, sentence))
+					newCaptionDict[image][category] = sentence
+	with open('test_caption_generated.pkl', 'rb') as f:
+		pickle.dump(newCaptionDict, f) 
 	nlp.close()
 
-def individualSentenceGeneration(caption):
+def individualSentenceGeneration(caption, nlp):
 	postFilter = PF()
 	try:
 		adj, adv = postFilter.filter(caption)
@@ -54,7 +59,7 @@ def individualSentenceGeneration(caption):
 		print('{}: {}\n'.format(category, sentence))
 	return
 
-def generateOutput(caption, adj, adv, outputCategories):
+def generateOutput(caption, adj, adv, outputCategories, nlp):
 	allOutputs = []
 	myCaption = mySentence(caption, nlp)
 	for outputType in outputCategories:
