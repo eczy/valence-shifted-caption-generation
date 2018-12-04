@@ -8,6 +8,8 @@ import parse_imdbData # use many of the same functions
 
 amazonDataDir = "./amazonRawData"
 amazonSentenceTupDir = "./amazon_sentenceTuples"
+amazonPairTupDir = "./amazon_pairTuples"
+amazonCountsDir = "./amazon_counts"
 
 def parse(path):
   g = gzip.open(path, 'r')
@@ -119,6 +121,121 @@ def getTrainPairTuples():
         # save the review pair tuples
         with open('trainPairTuples_amazon_'+tupInFile+'.pkl', 'wb') as trainPairsDataFile:
             pickle.dump(allPairsWithSentiments, trainPairsDataFile)
+
+
+def getTrainCounts():
+
+    # - number of times sentiment group occurs (C)
+    classCounts = {}
+
+    # - number of times word + sent group occours ( N(f=w_i, C=c_j) )
+    wordClassCount_tupMap = {}
+
+    # - set of all seen pairs
+    allPairs_tupSet = set()
+
+    # - number of pairs (non-unique)
+    pairCount = 0
+
+    # - number of words in the vocab (unique)
+    word_set = set()
+
+    # - 2D map of noun -> adjectives -> pair count
+    nounAdjCount_map = {}
+
+    # - 2D map of verb -> adverb -> pair count
+    verbAdvCount_map = {}
+
+
+    # open the review pair tuples
+    pairTuples = []
+
+    for tupInFile in os.listdir(amazonPairTupDir):
+        pairTuples = []
+        with open(amazonPairTupDir+"/"+tupInFile, 'rb') as trainPairsDataFile:
+            pairTuples = pickle.load(trainPairsDataFile)
+
+        for p in pairTuples:
+
+            # - number of times sentiment group occurs (C)
+            sentimentClass = p[3]
+            if sentimentClass not in classCounts:
+                classCounts[sentimentClass] = 0
+            classCounts[sentimentClass] += 1
+
+            # - number of times word + sent group occours ( N(f=w_i, C=c_j) )
+            wordSentTup0 = (p[1],p[3])
+            wordSentTup1 = (p[2],p[3])
+            if wordSentTup0 not in wordClassCount_tupMap:
+                wordClassCount_tupMap[wordSentTup0] = 0
+            if wordSentTup1 not in wordClassCount_tupMap:
+                wordClassCount_tupMap[wordSentTup1] = 0
+            wordClassCount_tupMap[wordSentTup0] += 1
+            wordClassCount_tupMap[wordSentTup1] += 1
+
+            # - set of all seen pairs
+            wordWordTup = (p[1],p[2])
+            if wordWordTup not in allPairs_tupSet:
+                allPairs_tupSet.add(wordWordTup)
+
+            # - number of pairs
+            pairCount += 1
+
+            # - number of words in the vocab
+            word_set.add(p[1])
+            word_set.add(p[2])
+
+            # - 2D map of noun -> adjectives -> pair count
+            # - 2D map of verb -> adverb -> pair count
+            modifiedWord = p[1]
+            modifierWord  = p[2]
+            relationship = p[0]
+            if relationship == "amod":
+
+                # if noun not yet in map, add it as empty map
+                if modifiedWord not in nounAdjCount_map:
+                    nounAdjCount_map[modifiedWord] = {}
+
+                # if adj not yet in [noun] map, add it as 0 count int
+                if modifierWord not in nounAdjCount_map[modifiedWord]:
+                    nounAdjCount_map[modifiedWord][modifierWord] = 0
+
+                # increment the count of this noun-adj pair
+                nounAdjCount_map[modifiedWord][modifierWord] += 1
+
+            elif relationship == "advmod":
+
+                # if verb not yet in map, add it as empty map
+                if modifiedWord not in verbAdvCount_map:
+                    verbAdvCount_map[modifiedWord] = {}
+
+                # if adverb not yet in [verb] map, add it as 0 count int
+                if modifierWord not in verbAdvCount_map[modifiedWord]:
+                    verbAdvCount_map[modifiedWord][modifierWord] = 0
+
+                # increment the count of this adverb-adj pair
+                verbAdvCount_map[modifiedWord][modifierWord] += 1
+
+
+    finalMap = {}
+    finalMap["classCounts"] = classCounts
+    finalMap["wordClassCount"] = wordClassCount_tupMap
+    finalMap["allPairs"] = allPairs_tupSet
+    finalMap["pairCount"] = pairCount
+    finalMap["uniqueWordCount"] = len(word_set)
+    finalMap["nounAdjCount"] = nounAdjCount_map
+    finalMap["verbAdvCount"] = verbAdvCount_map
+
+
+    # save the counts
+    # if the data is broken into sentiment categories, save to different file
+    if "vNeg" in finalMap["classCounts"].keys():
+        with open(amazonCountsDir+"/trainCounts_cats_amazon.pkl", 'wb') as trainCountsFile:
+            pickle.dump(finalMap, trainCountsFile)
+    else:
+        with open(amazonCountsDir+"/trainCounts_amazon.pkl", 'wb') as trainCountsFile:
+            pickle.dump(finalMap, trainCountsFile)
+
 
 
 
