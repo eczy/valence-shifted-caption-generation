@@ -31,15 +31,15 @@ def main():
 				for k, v in adj.items():
 					outputCategories.update([k1 for k1 in v.keys()])
 
-				output = generateOutput(caption, adj, adv, list(outputCategories))
+				output = generateOutput(caption, adj, adv, list(outputCategories), nlp)
 				f.write(caption + '\n')
 				for category, sentence in zip(outputCategories, output):
 					f.write('{}: {}\n'.format(category, sentence))
 	nlp.close()
 
-def generateOutput(caption, adj, adv, outputCategories):
+def generateOutput(caption, adj, adv, outputCategories, nlp):
 	allOutputs = []
-	myCaption = mySentence(caption)
+	myCaption = mySentence(caption, nlp)
 	for outputType in outputCategories:
 		output = ""
 		space = " "
