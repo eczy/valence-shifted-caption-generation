@@ -70,12 +70,8 @@ class PostFilter:
 
 		for item in candidateDict:
 			word = item[0]
-			valence = float(item[1])
-			if valence <= -0.5: valenceDict['vNeg'].append(word)
-			elif valence < 0.0: valenceDict['pNeg'].append(word)
-			elif valence == 0.0: valenceDict['neut'].append(word)
-			elif valence < 0.5: valenceDict['pPos'].append(word)
-			else: valenceDict['vPos'].append(word)
+			valenceClass = item[1]
+			valenceDict[valenceClass].append(word)
 
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
