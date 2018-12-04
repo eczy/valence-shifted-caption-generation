@@ -1,5 +1,5 @@
 stanford-corenlp-full-2018-10-05/*
-.DS_Store
+*.DS_Store
 venv/*
 
 *.pyc
