@@ -128,7 +128,9 @@ class PostFilter:
 		candidateAdverbs = {}
 		for noun in s.adjectives:
 			if self._opinion:
-				commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if self.isFine(a, s.adjectives[noun][a])]))
+				# print((noun,s.adjectives[noun]))
+				commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if self.isFine(a.lower(), s.adjectives[noun][a])]))
+				# print((noun,commonAdjectives))
 				candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
 			elif self._GIL:
 				commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
@@ -149,8 +151,10 @@ class PostFilter:
 
 		for verb in s.adverbs:
 			if self._opinion:
-				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a, s.adverbs[verb][a])]))
-				candidateAdverbs[noun] = self.subClassWords(candidateAdverbs)
+				# print((verb,s.adverbs[verb]))
+				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a.lower(), s.adverbs[verb][a])]))
+				# print((verb,commonAdverbs))
+				candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
 			elif self._GIL:
 				commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
 				# No Filters set, break up candidates by valence class

@@ -45,13 +45,14 @@ def main():
 def individualSentenceGeneration(caption):
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	postFilter = PF()
+	adj, adv = postFilter.filter(caption, nlp)
 	try:
 		adj, adv = postFilter.filter(caption, nlp)
-	except KeyError:
-		print("Unable to generate caption")
+	except KeyError as e:
+		print("Unable to generate caption: Message: {}".format(e))
 		return
 	print(adj)
-
+	print(adv)
 	outputCategories = set()
 	for k, v in adj.items():
 		outputCategories.update([k1 for k1 in v.keys()])
@@ -80,4 +81,4 @@ def generateOutput(caption, adj, adv, outputCategories, nlp):
 
 if __name__ == "__main__":
 	# main()
-	individualSentenceGeneration("Two people walk on the track")
+	individualSentenceGeneration("Man in suit points his finger")

@@ -32,8 +32,8 @@ class mySentence:
 		# we will choose numChosen of them for possible replacement words.
 		# From each replacement word, we will choose numSynonyms synonyms as 
 		# further possible replacement words.
-		self.numPossible = 20
-		self.numChosen = 20
+		self.numPossible = 7
+		self.numChosen = 7
 		self.numSynonyms = 3
 		
 		self.nouns = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in NOUN_TAGS]
@@ -64,7 +64,7 @@ class mySentence:
 		adj_dict = {n:{} for n in self.nouns}
 		for word in self.nouns:
 			possible = self.model.nounAdjCount_map[word]
-			adj_dict[word] = dict.fromkeys(self.possibleReplacements(possible),0)
+			adj_dict[word] = dict.fromkeys(self.possibleReplacements(word, possible),0)
 		adj_dict = self.valenceRank(adj_dict)
 		return adj_dict
 
@@ -72,16 +72,23 @@ class mySentence:
 		adv_dict = {v:{} for v in self.verbs}
 		for word in self.verbs:
 			possible = self.model.verbAdvCount_map[word]
-			adv_dict[word] = dict.fromkeys(self.possibleReplacements(possible),0)
+			adv_dict[word] = dict.fromkeys(self.possibleReplacements(word, possible),0)
 		adv_dict = self.valenceRank(adv_dict)
 		return adv_dict
 
-	def possibleReplacements(self, possible):
-		possible_sorted = sorted([(possible[k],k) for k in possible], key=lambda x:x[0], reverse=True)
-		chosen = sample(range(0, min(self.numPossible, len(possible_sorted))), min(self.numChosen, len(possible_sorted)))
-		final = set(possible_sorted[i][1] for i in chosen)
-		for a in chosen:
-			final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
+	def possibleReplacements(self, word, possible):
+		positive_words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == 'pos']
+		negative_words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == 'neg']
+		possible_positive_sorted = sorted([k for k in positive_words], key=lambda x:x[1], reverse=True)
+		possible_negative_sorted = sorted([k for k in negative_words], key=lambda x:x[1], reverse=True)
+		chosen_pos = sample(range(0, min(self.numPossible, len(possible_positive_sorted))), min(self.numChosen, len(possible_positive_sorted)))
+		chosen_neg = sample(range(0, min(self.numPossible, len(possible_negative_sorted))), min(self.numChosen, len(possible_negative_sorted)))
+		final_pos = list(set(possible_positive_sorted[i][0] for i in chosen_pos))
+		final_neg = list(set(possible_negative_sorted[i][0] for i in chosen_neg))
+		final = set(final_pos + final_neg)
+		# for a in chosen:
+		# 	final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
+		# print(final)
 		return final
 
 	def valenceRank(self, input_dict):
