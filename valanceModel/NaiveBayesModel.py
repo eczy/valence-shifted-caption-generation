@@ -100,3 +100,21 @@ class sentimentModel:
                 argMaxC = c
 
         return argMaxC
+
+
+    # return confidence of this guess
+    def predConfidence(self, sentClass, w0, w1):
+        # classProbs = {}
+        # for k in self._classCounts_map.keys():
+        #     classProbs[k] = 0.0
+
+        posProb = classProbs[k] = P_c_givenW0W1('pos', w0, w1)
+        negProb = classProbs[k] = P_c_givenW0W1('neg', w0, w1)
+
+        confidence = 0
+        if sentClass == 'neg':
+            confidence = negProb / posProb
+        elif sentClass == 'pos':
+            confidence = posProb / negProb
+
+        return (confidence-1)
