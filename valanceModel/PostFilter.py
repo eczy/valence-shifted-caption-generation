@@ -2,10 +2,14 @@ import csv
 import os
 import numpy as np
 from valence import mySentence
+from stanfordcorenlp import StanfordCoreNLP
 import pickle
+import re
 
 class PostFilter:
 	_words = {}
+	_positiveWords = {}
+	_negativeWords = {}
 	_hostile = False
 	_strong = False
 	_power = False
@@ -14,9 +18,11 @@ class PostFilter:
 	_emotion = False
 	_filter = False
 	_filters = ['hostile', 'strong', 'power', 'pain', 'feel', 'emotion']
+	_opinion = False
+	_GIL = False
 
 	# Creates a post filter object with certain sets of filters
-	def __init__(self, hostile=False, strong=False, power=False, pain=False, feel=False, emotion=False):
+	def __init__(self, dataset='opinion', hostile=False, strong=False, power=False, pain=False, feel=False, emotion=False):
 		self._hostile = hostile
 		self._strong = strong
 		self._power = power
@@ -24,12 +30,50 @@ class PostFilter:
 		self._feel = feel
 		self._emotion = emotion
 		# Check to see if any filtering needs to be done
-		if self._hostile or self._strong or self._power or self._pain or self._feel or self._emotion:
-			self._filter = True
-		if not os.path.exists(os.getcwd() + '/generalInquirerLexicon.pkl'):
-			self.parseGeneralInquirerLexicon('inquirerbasic.csv')
+		if dataset == 'opinion':
+			self._opinion = True
+			if not os.path.exists('opinionWords.pkl'):
+				self.parseOpinionWords('positive-words.txt', pos=True)
+				self.parseOpinionWords('negative-words.txt', neg=True)
+			else:
+				self.loadOpinionWords('opinionWords.pkl')
+		elif dataset == 'GIL':
+			self._GIL = True
+			if self._hostile or self._strong or self._power or self._pain or self._feel or self._emotion:
+				self._filter = True
+			if not os.path.exists(os.getcwd() + '/generalInquirerLexicon.pkl'):
+				self.parseGeneralInquirerLexicon('inquirerbasic.csv')
+			else:
+				self.loadGeneralInquirerLexicon(os.getcwd() + '/generalInquirerLexicon.pkl')
 		else:
-			self.loadGeneralInquirerLexicon(os.getcwd() + '/generalInquirerLexicon.pkl')
+			print("dataset must be one of <opinion> or <GIL>")
+			exit()
+
+	def parseOpinionWords(self, filename, pos=False, neg=False):
+		with open(filename, 'r', errors='ignore') as f:
+			for line in f:
+				if pos:
+					self._words[line.rstrip().lower()] = 'pos'
+					self._positiveWords[line.rstrip().lower()] = pos
+				elif neg:
+					self._words[line.rstrip().lower()] = 'neg'
+					self._negativeWords[line.rstrip().lower()] = neg
+		opinionWords = {}
+		opinionWords['words'] = self._words
+		opinionWords['pos'] = self._positiveWords
+		opinionWords['neg'] = self._negativeWords
+		with open('opinionWords.pkl', 'wb') as f:
+			pickle.dump(opinionWords, f)
+		print("Finished reading opinion words list")
+		return
+
+	def loadOpinionWords(self, filename):
+		with open(filename, 'rb') as f:
+			opinionWords = pickle.load(f)
+			self._words = opinionWords['words']
+			self._positiveWords = opinionWords['pos']
+			self._negativeWords = opinionWords['neg']
+		print("Finished loading opinion words")
 
 	def loadGeneralInquirerLexicon(self, filename):
 		generalInquirerLexicon = pickle.load(open(filename, 'rb'))
@@ -62,17 +106,13 @@ class PostFilter:
 
 	def subClassWords(self, candidateDict):
 		valenceDict = {}
-		valenceDict['vNeg'] = []
-		valenceDict['pNeg'] = []
+		valenceDict['pos'] = []
 		valenceDict['neut'] = []
-		valenceDict['pPos'] = []
-		valenceDict['vPos'] = []
-
+		valenceDict['neg'] = []
 		for item in candidateDict:
 			word = item[0]
 			valenceClass = item[1]
 			valenceDict[valenceClass].append(word)
-
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
 				randNum = np.random.randint(0, len(valenceDict[key]))
@@ -87,41 +127,46 @@ class PostFilter:
 		candidateAdjectives = {}
 		candidateAdverbs = {}
 		for noun in s.adjectives:
-			commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
-			# No Filters set, break up candidates by valence class
-			if not self._filter:
+			if self._opinion:
+				commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if self.isFine(a, s.adjectives[noun][a])]))
 				candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
-			else:
-				filteredAdjectives = {}
-				for pair in commonAdjectives:
-					if union:
-						if self.inUnion(pair[0]):
-							filteredAdjectives[pair[0]] = pair[1]
-					elif intersection:
-						if self.inIntersection(pair[0]):
-							filteredAdjectives[pair[0]] = pair[1]
+			elif self._GIL:
+				commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
+				# No Filters set, break up candidates by valence class
+				if not self._filter:
+					candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
+				else:
+					filteredAdjectives = {}
+					for pair in commonAdjectives:
+						if union:
+							if self.inUnion(pair[0]):
+								filteredAdjectives[pair[0]] = pair[1]
+						elif intersection:
+							if self.inIntersection(pair[0]):
+								filteredAdjectives[pair[0]] = pair[1]
 
 				candidateAdjectives[noun] = self.subClassWords(filteredAdjectives)
 
-
-
 		for verb in s.adverbs:
-			commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
-			# No Filters set, break up candidates by valence class
-			if not self._filter:
-				candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
-			else:
-				filteredAdverbs = {}
-				for pair in commonAdverbs:
-					if union:
-						if self.inUnion(pair[0]):
-							filteredAdverbs[pair[0]] = pair[1]
-					elif intersection:
-						if self.inIntersection(pair[0]):
-							filteredAdverbs[pair[0]] = pair[1]
+			if self._opinion:
+				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a, s.adverbs[verb][a])]))
+				candidateAdverbs[noun] = self.subClassWords(candidateAdverbs)
+			elif self._GIL:
+				commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
+				# No Filters set, break up candidates by valence class
+				if not self._filter:
+					candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
+				else:
+					filteredAdverbs = {}
+					for pair in commonAdverbs:
+						if union:
+							if self.inUnion(pair[0]):
+								filteredAdverbs[pair[0]] = pair[1]
+						elif intersection:
+							if self.inIntersection(pair[0]):
+								filteredAdverbs[pair[0]] = pair[1]
 
-				candidateAdverbs[verb] = self.subClassWords(filteredAdverbs)
-
+					candidateAdverbs[verb] = self.subClassWords(filteredAdverbs)
 		return candidateAdjectives, candidateAdverbs
 
 	def inUnion(self, word):
@@ -137,8 +182,20 @@ class PostFilter:
 				return False
 		return True
 
+	def isFine(self, s, tag):
+		regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+		if regex.search(s) is None:
+			return True
+		if tag == 'pos':
+			return s in self._positiveWords
+		if tag == 'neg':
+			return s in self._negativeWords
+		return False
+
 
 if __name__ == '__main__':
+	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter(mySentence('the person walks'))
+	adj, adv = filteredAdjectivesAndAdverbs.filter('There is a knife room', nlp)
+	nlp.close()
 	print(adj, adv)

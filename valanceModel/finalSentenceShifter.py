@@ -42,7 +42,6 @@ def main():
 		pickle.dump(newCaptionDict, f) 
 	nlp.close()
 
-
 def individualSentenceGeneration(caption):
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	postFilter = PF()
@@ -81,4 +80,4 @@ def generateOutput(caption, adj, adv, outputCategories, nlp):
 
 if __name__ == "__main__":
 	# main()
-	individualSentenceGeneration("three dogs are working in a library")
+	individualSentenceGeneration("Two people walk on the track")
