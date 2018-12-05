@@ -5,7 +5,6 @@ import json
 import numpy as np
 from random import randint, sample
 
-
 # Expect dictionary of bigram counts for NN-JJ / ADV-VB
 # Expect a model that takes in pairs as input and outputs
 # valence rank.
@@ -63,7 +62,7 @@ class mySentence:
 	def getAdjectives(self):
 		adj_dict = {n:{} for n in self.nouns}
 		for word in self.nouns:
-			possible = self.model.nounAdjCount_map[word]
+			possible = self.model.nounAdjCount_map[word]			
 			adj_dict[word] = dict.fromkeys(self.possibleReplacements(word, possible),0)
 		adj_dict = self.valenceRank(adj_dict)
 		return adj_dict
@@ -77,19 +76,40 @@ class mySentence:
 		return adv_dict
 
 	def possibleReplacements(self, word, possible):
-		positive_words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == 'pos']
-		negative_words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == 'neg']
-		possible_positive_sorted = sorted([k for k in positive_words], key=lambda x:x[1], reverse=True)
-		possible_negative_sorted = sorted([k for k in negative_words], key=lambda x:x[1], reverse=True)
-		chosen_pos = sample(range(0, min(self.numPossible, len(possible_positive_sorted))), min(self.numChosen, len(possible_positive_sorted)))
-		chosen_neg = sample(range(0, min(self.numPossible, len(possible_negative_sorted))), min(self.numChosen, len(possible_negative_sorted)))
-		final_pos = list(set(possible_positive_sorted[i][0] for i in chosen_pos))
-		final_neg = list(set(possible_negative_sorted[i][0] for i in chosen_neg))
-		final = set(final_pos + final_neg)
+		keywords = ['pos', 'neg']
+		final = []
+		print(word)
+		print(possible)
+		print('\n\n\n')
+		for key in keywords:
+			words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == key]
+
+			words_sorted = sorted([k for k in words], key=lambda x:x[1], reverse=True)
+			chosen = sample(range(0, min(self.numPossible, len(words_sorted))), min(self.numChosen, len(words_sorted)))
+			final.append(list(set(words_sorted[i][0] for i in chosen)))
+		final = set(final[0] + final[1])
+
 		# for a in chosen:
 		# 	final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
 		# print(final)
 		return final
+
+	def PMI(self, word, possible):
+		PMI_dict = {}
+		for adj in possible.keys():
+
+			countAdj = self.wordCounts[adj]
+			countWord = self.wordCounts[word]
+			bigramCount = possible[adj]
+
+			prob_bigram = bigramCount / (countAdj)
+			probAdj = countAdj / vocabSize
+			probWord = countWord / vocabSize
+
+			PMI = math.log(prob_bigram / (probAdj * probWord), 2)
+			possible[word][adj] = PMI
+		return possible
+
 
 	def valenceRank(self, input_dict):
 		for noun in input_dict.keys():
@@ -111,7 +131,10 @@ def synonyms(word, maxSyns):
 	return final
 
 
-
+if __name__ == '__main__':
+	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
+	s = mySentence("two men sat in a room and ate the food", nlp)
+	print(s.adjectives)
 
 
 
