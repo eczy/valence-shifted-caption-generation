@@ -82,6 +82,7 @@ class sentimentModel:
 
     # return the class predicted by the model given only the words
     # c = argmax [ P_ci_givenW0W1 ] for all ci
+    # w0 = adj/adverb , w0 = noun/verb
     def predictedClass(self, w0, w1):
 
         # map of class -> probability it is this class
@@ -103,13 +104,16 @@ class sentimentModel:
 
 
     # return confidence of this guess
+    # 0.0 == equal chance of it being right or wrong
+    # < 0.0 == prediciton is increasingly incorrect
+    # > 0.0 == prediction is increasinly correct
     def predConfidence(self, sentClass, w0, w1):
         # classProbs = {}
         # for k in self._classCounts_map.keys():
         #     classProbs[k] = 0.0
 
-        posProb = classProbs[k] = P_c_givenW0W1('pos', w0, w1)
-        negProb = classProbs[k] = P_c_givenW0W1('neg', w0, w1)
+        posProb = self.P_c_givenW0W1('pos', w0, w1)
+        negProb = self.P_c_givenW0W1('neg', w0, w1)
 
         confidence = 0
         if sentClass == 'neg':
