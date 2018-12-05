@@ -15,8 +15,11 @@ class sentimentModel:
     # - set of all seen pairs
     allPairs_tupSet = set()
 
-    # - number of pairs (non-unique)
+    # - number of pairs (non-unique) (bigrams)
     pairCount_int = 0
+
+    # - number of unigrams
+    uniCount_int = 0
 
     # - number of words in the vocab (unique)
     _uniqueWordCount = 0
@@ -41,6 +44,7 @@ class sentimentModel:
         self._wordClassCount_tupMap   = countsMap["wordClassCount"]
         self.allPairs_tupSet         = countsMap["allPairs"]
         self.pairCount_int           = countsMap["pairCount"]
+        self.uniCount_int            = countsMap["numUnigrams"]
         self._uniqueWordCount         = countsMap["uniqueWordCount"]
         self.nounAdjCount_map         = countsMap["nounAdjCount"]
         self.verbAdvCount_map         = countsMap["verbAdvCount"]

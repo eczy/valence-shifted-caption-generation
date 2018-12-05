@@ -146,6 +146,13 @@ def getTrainCounts():
     # - 2D map of verb -> adverb -> pair count
     verbAdvCount_map = {}
 
+    # - map of word -> count
+    unigramCount_map = {}
+
+    # - unigram count
+    uniCount = 0
+
+
 
     # open the review pair tuples
     pairTuples = []
@@ -180,6 +187,9 @@ def getTrainCounts():
 
             # - number of pairs
             pairCount += 1
+
+            # - unigram count
+            uniCount += 2
 
             # - number of words in the vocab
             word_set.add(p[1])
@@ -216,6 +226,15 @@ def getTrainCounts():
                 # increment the count of this adverb-adj pair
                 verbAdvCount_map[modifiedWord][modifierWord] += 1
 
+            # - map of word -> count
+            if modifierWord not in unigramCount_map:
+                unigramCount_map[modifierWord] = 0
+            if modifiedWord not in unigramCount_map:
+                unigramCount_map[modifiedWord] = 0
+            unigramCount_map[modifierWord] += 1
+            unigramCount_map[modifiedWord] += 1
+
+
 
     finalMap = {}
     finalMap["classCounts"] = classCounts
@@ -225,6 +244,9 @@ def getTrainCounts():
     finalMap["uniqueWordCount"] = len(word_set)
     finalMap["nounAdjCount"] = nounAdjCount_map
     finalMap["verbAdvCount"] = verbAdvCount_map
+    finalMap["unigramCount"] = unigramCount_map
+    finalMap["numUnigrams"] = uniCount
+
 
 
     # save the counts
