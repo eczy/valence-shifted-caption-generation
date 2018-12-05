@@ -46,7 +46,7 @@ class sentimentModel:
         self.pairCount_int           = countsMap["pairCount"]
         self.uniCount_int            = countsMap["numUnigrams"]
         self._uniqueWordCount         = countsMap["uniqueWordCount"]
-        self.unigramCount_map         = finalMap["unigramCount"]
+        self.unigramCount_map         = countsMap["unigramCount"]
         self.nounAdjCount_map         = countsMap["nounAdjCount"]
         self.verbAdvCount_map         = countsMap["verbAdvCount"]
 
