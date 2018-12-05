@@ -14,6 +14,9 @@ def main():
 	postFilter = PF()
 	numCaptions = len(captionList.keys())
 	newCaptionDict = {k:{} for k in captionList}
+	generatedCaptionsAndClasses = {}
+	generatedCaptionsAndClasses['pos'] = []
+	generatedCaptionsAndClasses['neg'] = []
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	count = 0
 	with open(outFile, 'w') as f:
@@ -28,7 +31,6 @@ def main():
 				
 				bar.update(count)
 				count += 1
-
 				outputCategories = set()
 				for k, v in adj.items():
 					outputCategories.update([k1 for k1 in v.keys()])
@@ -36,10 +38,16 @@ def main():
 				output = generateOutput(caption, adj, adv, list(outputCategories), nlp)
 				f.write(caption + '\n')
 				for category, sentence in zip(outputCategories, output):
+					if category == 'pos':
+						generatedCaptionsAndClasses['pos'].append(sentence)
+					elif category == 'neg':
+						generatedCaptionsAndClasses['neg'].append(sentence)
 					f.write('{}: {}\n'.format(category, sentence))
 					newCaptionDict[image][category] = sentence
-	with open('test_caption_generated.pkl', 'rb') as f:
+	with open('test_caption_generated.pkl', 'wb') as f:
 		pickle.dump(newCaptionDict, f) 
+	with open('caption_classes_list.pkl', 'wb') as f:
+		pickle.dump(newCaptionDict, f)
 	nlp.close()
 
 def individualSentenceGeneration(caption):
@@ -75,10 +83,10 @@ def generateOutput(caption, adj, adv, outputCategories, nlp):
 				output = output + adj[lemma][outputType] + space
 			# elif lemma in myCaption.verbs:
 			# 	output = output + adv[lemma][outputType] + space
-			output = output + word + space
+			# output = output + word + space
 		allOutputs.append(output)
 	return allOutputs
 
 if __name__ == "__main__":
-	# main()
-	individualSentenceGeneration("A child eating with a spoon")
+	main()
+	#individualSentenceGeneration("The stapler was sitting on the desk")

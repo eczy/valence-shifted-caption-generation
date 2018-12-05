@@ -115,8 +115,8 @@ class PostFilter:
 			valenceDict[valenceClass].append(word)
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
-				randNum = np.random.randint(0, len(valenceDict[key]))
-				valenceDict[key] = valenceDict[key][randNum]	
+				# randNum = np.random.randint(0, len(valenceDict[key]))
+				valenceDict[key] = valenceDict[key][0]	
 			else:
 				valenceDict[key] = ''
 		return valenceDict
@@ -188,16 +188,16 @@ class PostFilter:
 		return True
 
 	def isFine(self, s, tag, word, NBM):
-		regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
-		if regex.search(s) is None:
-			return True
-		if NBM.predConfidence(tag, s, word) < 0.3:
+		# regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+		# if regex.search(s) is None:
+		# 	return True
+		if NBM.predConfidence(tag, s, word) < 0.5:
 			return False
-		if tag == 'pos':
-			return s in self._positiveWords
-		if tag == 'neg':
-			return s in self._negativeWords
-		return False
+		# if tag == 'pos':
+		# 	return s in self._positiveWords
+		# if tag == 'neg':
+		# 	return s in self._negativeWords
+		return True
 
 
 if __name__ == '__main__':
