@@ -124,12 +124,13 @@ class PostFilter:
 	# filter adjectives and adverbs based on whether you need pos/neg valence, and whether you want union/intersection of filters
 	def filter(self, sentence, nlp, union=True, intersection=False):
 		s = mySentence(sentence, nlp)
+		NBM = s.model
 		candidateAdjectives = {}
 		candidateAdverbs = {}
 		for noun in s.adjectives:
 			if self._opinion:
 				# print((noun,s.adjectives[noun]))
-				commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if self.isFine(a.lower(), s.adjectives[noun][a])]))
+				commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if self.isFine(a.lower(), s.adjectives[noun][a], noun, NBM)]))
 				# print((noun,commonAdjectives))
 				candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
 			elif self._GIL:
@@ -152,7 +153,7 @@ class PostFilter:
 		for verb in s.adverbs:
 			if self._opinion:
 				# print((verb,s.adverbs[verb]))
-				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a.lower(), s.adverbs[verb][a])]))
+				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a.lower(), s.adverbs[verb][a], verb, NBM)]))
 				# print((verb,commonAdverbs))
 				candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
 			elif self._GIL:
@@ -186,10 +187,12 @@ class PostFilter:
 				return False
 		return True
 
-	def isFine(self, s, tag):
+	def isFine(self, s, tag, word, NBM):
 		regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
 		if regex.search(s) is None:
 			return True
+		if NBM.predConfidence(tag, s, word) < 0.3:
+			return False
 		if tag == 'pos':
 			return s in self._positiveWords
 		if tag == 'neg':

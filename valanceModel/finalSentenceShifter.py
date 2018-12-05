@@ -81,4 +81,4 @@ def generateOutput(caption, adj, adv, outputCategories, nlp):
 
 if __name__ == "__main__":
 	# main()
-	individualSentenceGeneration("Man in suit points his finger")
+	individualSentenceGeneration("A child eating with a spoon")
