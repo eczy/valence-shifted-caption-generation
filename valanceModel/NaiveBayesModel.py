@@ -50,8 +50,13 @@ class sentimentModel:
     # return the probability of the class given the words
     # P(c) * PROD_i( P(x_i | c) )
     def P_c_givenW0W1(self, sentClass, w0, w1):
-        # P(c) = N(C = c) / Number of classes
-        Pc = self._classCounts_map[sentClass] / len(self._classCounts_map.keys())
+        # P(c) = N(C = c) / Number of samples (N)
+        N = 0
+        for numSampsInClass in self._classCounts_map.values():
+            N += numSampsInClass
+
+        Pc = self._classCounts_map[sentClass] / N
+
 
         # if never seen before word, set count to zero and use smoothing
         if (w0,sentClass) not in self._wordClassCount_tupMap:
@@ -61,12 +66,18 @@ class sentimentModel:
 
         P_w0_c = ( self._wordClassCount_tupMap[(w0,sentClass)] + 1 ) \
                   / ( self._classCounts_map[sentClass] + self._uniqueWordCount )
-        P_w1_c = ( self._wordClassCount_tupMap[(w1,sentClass)] + 1 ) \
-                  / ( self._classCounts_map[sentClass] + self._uniqueWordCount )
+        # TEST DEBUG - Ignore the noun / verb
+        # P_w1_c = ( self._wordClassCount_tupMap[(w1,sentClass)] + 1 ) \
+        #           / ( self._classCounts_map[sentClass] + self._uniqueWordCount )
+        P_w1_c = 1.0
 
         P_c_w0w1 = Pc * P_w0_c * P_w1_c
 
-        return P_c_w0w1
+        print("Prob of class " + sentClass + " = " + str(P_c_w0w1))
+
+        # TEST DEBUG - Return P(w | c) to avoid bias towards pos due to size
+        # return P_c_w0w1
+        return P_w0_c
 
 
     # return the class predicted by the model given only the words
