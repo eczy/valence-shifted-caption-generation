@@ -2,6 +2,7 @@ from stanfordcorenlp import StanfordCoreNLP
 import NaiveBayesModel as NBM
 from textblob import Word
 import json
+import math
 import numpy as np
 from random import randint, sample
 
@@ -31,8 +32,8 @@ class mySentence:
 		# we will choose numChosen of them for possible replacement words.
 		# From each replacement word, we will choose numSynonyms synonyms as 
 		# further possible replacement words.
-		self.numPossible = 7
-		self.numChosen = 7
+		self.numPossible = 50
+		self.numChosen = 50
 		self.numSynonyms = 3
 		
 		self.nouns = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in NOUN_TAGS]
@@ -42,7 +43,6 @@ class mySentence:
 		self.adverbs = self.getAdverbs()
 
 	def readSentence(self, sentence, nlp):
-		#nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 		output = json.loads(nlp.annotate(sentence, properties = {
 			"annotators": "tokenize,ssplit,parse,sentiment,lemma",
 			"outputFormat": "json",
@@ -56,7 +56,6 @@ class mySentence:
 				self.words.append(d['word'])
 				self.tags.append(d['pos'])
 
-		#nlp.close()
 		return
 
 	def getAdjectives(self):
@@ -78,38 +77,34 @@ class mySentence:
 	def possibleReplacements(self, word, possible):
 		keywords = ['pos', 'neg']
 		final = []
-		print(word)
-		print(possible)
-		print('\n\n\n')
+		possible = self.PMI(word, possible)
 		for key in keywords:
 			words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == key]
-
 			words_sorted = sorted([k for k in words], key=lambda x:x[1], reverse=True)
 			chosen = sample(range(0, min(self.numPossible, len(words_sorted))), min(self.numChosen, len(words_sorted)))
 			final.append(list(set(words_sorted[i][0] for i in chosen)))
 		final = set(final[0] + final[1])
-
 		# for a in chosen:
 		# 	final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
-		# print(final)
 		return final
 
 	def PMI(self, word, possible):
 		PMI_dict = {}
-		for adj in possible.keys():
+		totalNumBigrams = self.model.pairCount_int
+		totalNumUnigrams = self.model.uniCount_int
+		for modifier in possible.keys():
 
-			countAdj = self.wordCounts[adj]
-			countWord = self.wordCounts[word]
-			bigramCount = possible[adj]
+			countAdj = self.model.unigramCount_map[modifier]
+			countWord = self.model.unigramCount_map[word]
+			bigramCount = possible[modifier]
 
-			prob_bigram = bigramCount / (countAdj)
-			probAdj = countAdj / vocabSize
-			probWord = countWord / vocabSize
+			prob_bigram = bigramCount / totalNumBigrams
+			probAdj = countAdj / totalNumUnigrams
+			probWord = countWord / totalNumUnigrams
 
 			PMI = math.log(prob_bigram / (probAdj * probWord), 2)
-			possible[word][adj] = PMI
+			possible[modifier] = PMI if countAdj > 10 else 0
 		return possible
-
 
 	def valenceRank(self, input_dict):
 		for noun in input_dict.keys():
@@ -131,10 +126,10 @@ def synonyms(word, maxSyns):
 	return final
 
 
-if __name__ == '__main__':
-	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
-	s = mySentence("two men sat in a room and ate the food", nlp)
-	print(s.adjectives)
+# if __name__ == '__main__':
+# 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
+# 	s = mySentence("two men sat in a room and ate the food", nlp)
+# 	print(s.adjectives)
 
 
 
