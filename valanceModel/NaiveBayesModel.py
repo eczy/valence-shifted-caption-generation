@@ -73,7 +73,7 @@ class sentimentModel:
 
         P_c_w0w1 = Pc * P_w0_c * P_w1_c
 
-        print("Prob of class " + sentClass + " = " + str(P_c_w0w1))
+        # print("Prob of class " + sentClass + " = " + str(P_c_w0w1))
 
         # TEST DEBUG - Return P(w | c) to avoid bias towards pos due to size
         # return P_c_w0w1
