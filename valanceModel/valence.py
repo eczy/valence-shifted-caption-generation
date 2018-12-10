@@ -1,5 +1,5 @@
 from stanfordcorenlp import StanfordCoreNLP
-import NaiveBayesModel as NBM
+import ProbModel as NBM
 from textblob import Word
 import json
 import math
@@ -30,12 +30,12 @@ class mySentence:
 
 		# numPossible represents the top n words taken from the corpus, of which
 		# we will choose numChosen of them for possible replacement words.
-		# From each replacement word, we will choose numSynonyms synonyms as 
+		# From each replacement word, we will choose numSynonyms synonyms as
 		# further possible replacement words.
 		self.numPossible = numPossible
 		self.numChosen = numChosen
 		self.numSynonyms = 3
-		
+
 		self.nouns = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in NOUN_TAGS]
 		self.verbs = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in VERB_TAGS]
 
@@ -49,7 +49,7 @@ class mySentence:
 			"ssplt.eolonly": "true",
 			"enforceRequirements": "false"
 		}))
-		
+
 		for a in output['sentences']:
 			for d in a['tokens']:
 				self.lemmas.append(d['lemma'])
@@ -60,7 +60,7 @@ class mySentence:
 	def getAdjectives(self):
 		adj_dict = {n:{} for n in self.nouns}
 		for word in self.nouns:
-			possible = self.model.nounAdjCount_map[word]			
+			possible = self.model.nounAdjCount_map[word]
 			adj_dict[word] = dict.fromkeys(self.possibleReplacements(word, possible),0)
 		adj_dict = self.valenceRank(adj_dict)
 		return adj_dict
@@ -101,18 +101,20 @@ class mySentence:
 			probAdj = countAdj / totalNumUnigrams
 			probWord = countWord / totalNumUnigrams
 
-			PMI_check = (prob_bigram != 0) and (probAdj != 0) and (probWord != 0) 
+			PMI_check = (prob_bigram != 0) and (probAdj != 0) and (probWord != 0)
 
 			PMI = math.log(prob_bigram / (probAdj * probWord), 2) if PMI_check else 0
-			possible[modifier] = PMI if countAdj > 10 else 0
-		return possible
+			if countAdj > 50:
+				PMI_dict[modifier] = PMI
+		return PMI_dict
+		# return possible
 
 	def valenceRank(self, input_dict):
 		for noun in input_dict.keys():
 			for adj in input_dict[noun]:
 				input_dict[noun][adj] = self.model.predictedClass(adj, noun)
 		return input_dict
-	
+
 
 def synonyms(word, maxSyns):
 	syns, ants = [], []
@@ -131,16 +133,3 @@ def synonyms(word, maxSyns):
 # 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 # 	s = mySentence("two men sat in a room and ate the food", nlp)
 # 	print(s.adjectives)
-
-
-
-
-
-
-
-
-
-
-
-
-

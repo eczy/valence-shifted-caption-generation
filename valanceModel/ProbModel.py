@@ -1,6 +1,7 @@
 import pickle
 
-# Naive Bayes Model
+# Custom model counts and probabilities
+# (Originally a Naive Bayes Model)
 # assume conditional independence
 #   This model is a black box that is used to find the probabilty given a
 # word pair and a sentiment class
@@ -80,9 +81,11 @@ class sentimentModel:
 
         # print("Prob of class " + sentClass + " = " + str(P_c_w0w1))
 
-        # TEST DEBUG - Return P(w | c) to avoid bias towards pos due to size
-        return P_c_w0w1
-#        return P_w0_c
+        # NB Output - Return P(w | c) to avoid bias towards pos due to size
+        # return P_c_w0w1
+
+        # Custom output
+        return P_w0_c
 
 
     # return the class predicted by the model given only the words
