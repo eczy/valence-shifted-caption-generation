@@ -1,10 +1,10 @@
+# This file implements the class used to create data for probabilisitic model
+
 import pickle
 
-# Custom model counts and probabilities
-# (Originally a Naive Bayes Model)
-# assume conditional independence
-#   This model is a black box that is used to find the probabilty given a
-# word pair and a sentiment class
+# This class is used as part of the custom word bigram model.
+# It tracks and computes using counts and probabilities of unigrams and bigrams
+# (Originally implemented a Naive Bayes Model, hence the commented out NB code)
 class sentimentModel:
 
     # - number of times sentiment group occurs (C)

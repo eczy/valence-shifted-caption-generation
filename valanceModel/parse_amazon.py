@@ -1,3 +1,8 @@
+# This file is used to parse amazon dataset data into a usable format.
+# It takes in the raw data (as a review with metadata) and generates a pickle
+#   containing the Noun-Adj and Verb-Adv pairs and their respective, scaled
+#   review score. It also generates intermediate forms of the data as pickles.
+
 import os
 import pickle
 import sys
@@ -18,7 +23,8 @@ def parse(path):
 
 
 
-# to match imdb parsing, we need to save a pickle of a list of tuples (text, sentiment)
+# Trim uneeded review metadata and create a pickle of a list of tuples
+#   where a tupe is (full review text, review sentiment from stars)
 def getTrainSentenceTuples():
 
     # list of all file paths to taining data (reviews)
@@ -54,7 +60,7 @@ def getTrainSentenceTuples():
                 pickle.dump(trainData, trainDataFile)
 
 
-
+# Convert a 5 start (1 to 5) review sentiment to the 1 point (-1 to +1)
 def convert5PointScaleTo1Point(floatSent):
     floatSent = floatSent-3 # now ranges -2 to +2
     floatSent = floatSent / 2 # now ranges from -1 to +1
@@ -76,7 +82,8 @@ def convert5PointScaleTo1Point(floatSent):
         return floatSent
 
 
-
+# Generate a pickle containing a list of tuples where a tuple
+# is (NN-JJ / VV-VB pair, sentiment)
 def getTrainPairTuples():
 
     # list of tuples (pairType, word0, word1, sentiment) for all pairs in all reviews
@@ -123,6 +130,7 @@ def getTrainPairTuples():
             pickle.dump(allPairsWithSentiments, trainPairsDataFile)
 
 
+# Generate a pickle with the final counts from all of the data inside a map
 def getTrainCounts():
 
     # - number of times sentiment group occurs (C)
@@ -151,7 +159,6 @@ def getTrainCounts():
 
     # - unigram count
     uniCount = 0
-
 
 
     # open the review pair tuples
@@ -259,6 +266,8 @@ def getTrainCounts():
             pickle.dump(finalMap, trainCountsFile)
 
 
+# Convert from a 5 category (vNeg, pNeg, neut, pPos, vPos) sentiment scale
+#   to a 3 category (neg, neut, pos) sentiment scale
 def convert5CatTo3Cat(cat):
     if cat == "vNeg" or cat == "pNeg":
         return "neg"
@@ -271,6 +280,10 @@ def convert5CatTo3Cat(cat):
                             cat = '+cat)
 
 
+# Convert from a 5 category (vNeg, pNeg, neut, pPos, vPos) sentiment scale to
+#   a 2 category sentiment scale (neg, pos)
+# This is used because we assume that a 3/5 star review on amazon is a negative
+#   review.
 def convert5CatTo2Cat(cat):
     if cat == "vNeg" or cat == "pNeg":
         return "neg"
@@ -283,7 +296,8 @@ def convert5CatTo2Cat(cat):
                             cat = '+cat)
 
 
-
+# The main function processes command line flags to decide which part(s) of
+#   the parsing process to run
 if __name__ == '__main__':
     # if newData flag is included, regenerate the pickle file of the tuple
     if "-newSentences" in sys.argv:

@@ -5,7 +5,7 @@ import sys
 import pickle
 from textblob import TextBlob
 
-
+# This function converts 1 point float sentiment (-1 to +1) scores to categories
 def convertSentFloatToClass(sentFloat):
     if ( sentFloat <  0.0):
         return "neg"
@@ -25,6 +25,9 @@ def convertSentFloatToClass(sentFloat):
 #     if aClass == "neut":
 #         return "neut"
 
+# The main function goes through all generated/modified captions and comapares
+#   their TextBlob sentiment against the desired sentiment. It tracks accuracy
+#   for the system and precision for each sentiment category
 if __name__ == '__main__':
     # load the caption + desired valance tuples
     with open(sys.argv[1], 'rb') as inFile:
