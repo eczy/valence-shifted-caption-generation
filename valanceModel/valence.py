@@ -118,13 +118,16 @@ class mySentence:
 		return PMI_dict
 		# return possible
 
+	# Get predicted class of every noun-adj pair and create the
+	# final dictionary for output
 	def valenceRank(self, input_dict):
 		for noun in input_dict.keys():
 			for adj in input_dict[noun]:
 				input_dict[noun][adj] = self.model.predictedClass(adj, noun)
 		return input_dict
 
-
+# Using synsets from WordNet, obtain a list of synonyms and antonyms
+# for a given word.
 def synonyms(word, maxSyns):
 	syns, ants = [], []
 	for syn in Word(word).synsets:
