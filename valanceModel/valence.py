@@ -22,7 +22,7 @@ NOUN_TAGS = ['NN', 'NNS']
 VERB_TAGS = ['VB','VBD','VBN','VBG','VBP','VBZ']
 
 class mySentence:
-	def __init__(self, sentence, nlp, numPossible = 50, numChosen = 50):
+	def __init__(self, sentence, nlp, numPossible = 20, numChosen = 20):
 
 		self.model = NBM.sentimentModel()
 		self.words, self.lemmas, self.tags = [], [], []
@@ -42,6 +42,9 @@ class mySentence:
 		self.adjectives = self.getAdjectives()
 		self.adverbs = self.getAdverbs()
 
+	# Using StanfordCoreNLP, read and tag the provided sentence.
+	# With the tagged sentence, populate the arrays 'lemmas', 'words',
+	# and 'tags'.
 	def readSentence(self, sentence, nlp):
 		output = json.loads(nlp.annotate(sentence, properties = {
 			"annotators": "tokenize,ssplit,parse,sentiment,lemma",
@@ -57,6 +60,7 @@ class mySentence:
 				self.tags.append(d['pos'])
 		return
 
+	# Get candidate adjectives for each noun in the sentence
 	def getAdjectives(self):
 		adj_dict = {n:{} for n in self.nouns}
 		for word in self.nouns:
@@ -65,6 +69,7 @@ class mySentence:
 		adj_dict = self.valenceRank(adj_dict)
 		return adj_dict
 
+	# Get candidate adverbs for each verb in the sentence
 	def getAdverbs(self):
 		adv_dict = {v:{} for v in self.verbs}
 		for word in self.verbs:
@@ -73,13 +78,16 @@ class mySentence:
 		adv_dict = self.valenceRank(adv_dict)
 		return adv_dict
 
+	# Pick self.numChosen words from the top self.numPossible ranked candidate
+	# adjectives, with rankings based on PMI calculations. Find positive and 
+	# negative words and return the set of both of these. 
 	def possibleReplacements(self, word, possible):
 		keywords = ['pos', 'neg']
 		final = []
 		possible = self.PMI(word, possible)
 		for key in keywords:
 			words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == key]
-			words_sorted = sorted([k for k in words], key=lambda x:x[1], reverse=True)
+			words_sorted = sorted([k for k in words], key=lambda x:x[1], reverse=True)			
 			chosen = sample(range(0, min(self.numPossible, len(words_sorted))), min(self.numChosen, len(words_sorted)))
 			final.append(list(set(words_sorted[i][0] for i in chosen)))
 		final = set(final[0] + final[1])
@@ -87,6 +95,7 @@ class mySentence:
 		# 	final.update(set(synonyms(possible_sorted[a][1], self.numSynonyms)))
 		return final
 
+	# Calculate PMI of all adjective-noun pairs for a given noun.
 	def PMI(self, word, possible):
 		PMI_dict = {}
 		totalNumBigrams = self.model.pairCount_int
@@ -105,10 +114,8 @@ class mySentence:
 
 			PMI = math.log(prob_bigram / (probAdj * probWord), 2) if PMI_check else 0
 			if countAdj > 10:
-				possible[modifier] = PMI
-			else:
-				del possible[modifier]
-		return possible
+				PMI_dict[modifier] = PMI
+		return PMI_dict
 
 	def valenceRank(self, input_dict):
 		for noun in input_dict.keys():
@@ -128,22 +135,3 @@ def synonyms(word, maxSyns):
 	for ant in ants:
 		final.append(ant)
 	return final
-
-
-# if __name__ == '__main__':
-# 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
-# 	s = mySentence("two men sat in a room and ate the food", nlp)
-# 	print(s.adjectives)
-
-
-
-
-
-
-
-
-
-
-
-
-
