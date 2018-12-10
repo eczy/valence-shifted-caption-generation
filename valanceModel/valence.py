@@ -22,7 +22,7 @@ NOUN_TAGS = ['NN', 'NNS']
 VERB_TAGS = ['VB','VBD','VBN','VBG','VBP','VBZ']
 
 class mySentence:
-	def __init__(self, sentence, nlp):
+	def __init__(self, sentence, nlp, numPossible = 50, numChosen = 50):
 
 		self.model = NBM.sentimentModel()
 		self.words, self.lemmas, self.tags = [], [], []
@@ -32,8 +32,8 @@ class mySentence:
 		# we will choose numChosen of them for possible replacement words.
 		# From each replacement word, we will choose numSynonyms synonyms as 
 		# further possible replacement words.
-		self.numPossible = 50
-		self.numChosen = 50
+		self.numPossible = numPossible
+		self.numChosen = numChosen
 		self.numSynonyms = 3
 		
 		self.nouns = [self.lemmas[i] for i in range(len(self.lemmas)) if self.tags[i] in NOUN_TAGS]
@@ -55,7 +55,6 @@ class mySentence:
 				self.lemmas.append(d['lemma'])
 				self.words.append(d['word'])
 				self.tags.append(d['pos'])
-
 		return
 
 	def getAdjectives(self):
@@ -102,7 +101,9 @@ class mySentence:
 			probAdj = countAdj / totalNumUnigrams
 			probWord = countWord / totalNumUnigrams
 
-			PMI = math.log(prob_bigram / (probAdj * probWord), 2)
+			PMI_check = (prob_bigram != 0) and (probAdj != 0) and (probWord != 0) 
+
+			PMI = math.log(prob_bigram / (probAdj * probWord), 2) if PMI_check else 0
 			possible[modifier] = PMI if countAdj > 10 else 0
 		return possible
 
