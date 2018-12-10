@@ -104,7 +104,10 @@ class mySentence:
 			PMI_check = (prob_bigram != 0) and (probAdj != 0) and (probWord != 0) 
 
 			PMI = math.log(prob_bigram / (probAdj * probWord), 2) if PMI_check else 0
-			possible[modifier] = PMI if countAdj > 10 else 0
+			if countAdj > 10:
+				possible[modifier] = PMI
+			else:
+				del possible[modifier]
 		return possible
 
 	def valenceRank(self, input_dict):
