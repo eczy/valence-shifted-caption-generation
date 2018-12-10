@@ -298,6 +298,10 @@ def convert5CatTo2Cat(cat):
 
 # The main function processes command line flags to decide which part(s) of
 #   the parsing process to run
+# flags: -newSentences   <- used to strip amazon data of metadata and generate (sentence, sentiment) tuples
+#        -newPairs       <- used to parse review sentences into pairs and generate (pair, sentiment) tuples
+#        -newCounts      <- used to process review pairs and get total counts for the system stored in a map
+#        -categories     <- used to save sentiment as a category (pos/neg) rather than a float
 if __name__ == '__main__':
     # if newData flag is included, regenerate the pickle file of the tuple
     if "-newSentences" in sys.argv:
