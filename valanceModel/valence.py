@@ -79,15 +79,15 @@ class mySentence:
 		return adv_dict
 
 	# Pick self.numChosen words from the top self.numPossible ranked candidate
-	# adjectives, with rankings based on PMI calculations. Find positive and 
-	# negative words and return the set of both of these. 
+	# adjectives, with rankings based on PMI calculations. Find positive and
+	# negative words and return the set of both of these.
 	def possibleReplacements(self, word, possible):
 		keywords = ['pos', 'neg']
 		final = []
 		possible = self.PMI(word, possible)
 		for key in keywords:
 			words = [(k,possible[k]) for k in possible if self.model.predictedClass(k, word) == key]
-			words_sorted = sorted([k for k in words], key=lambda x:x[1], reverse=True)			
+			words_sorted = sorted([k for k in words], key=lambda x:x[1], reverse=True)
 			chosen = sample(range(0, min(self.numPossible, len(words_sorted))), min(self.numChosen, len(words_sorted)))
 			final.append(list(set(words_sorted[i][0] for i in chosen)))
 		final = set(final[0] + final[1])
@@ -113,16 +113,10 @@ class mySentence:
 			PMI_check = (prob_bigram != 0) and (probAdj != 0) and (probWord != 0)
 
 			PMI = math.log(prob_bigram / (probAdj * probWord), 2) if PMI_check else 0
-<<<<<<< HEAD
 			if countAdj > 50:
 				PMI_dict[modifier] = PMI
 		return PMI_dict
 		# return possible
-=======
-			if countAdj > 10:
-				PMI_dict[modifier] = PMI
-		return PMI_dict
->>>>>>> 192ed04a25067d6cd685ebe9785d3b0e93c183b9
 
 	def valenceRank(self, input_dict):
 		for noun in input_dict.keys():
@@ -142,12 +136,3 @@ def synonyms(word, maxSyns):
 	for ant in ants:
 		final.append(ant)
 	return final
-<<<<<<< HEAD
-
-
-# if __name__ == '__main__':
-# 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
-# 	s = mySentence("two men sat in a room and ate the food", nlp)
-# 	print(s.adjectives)
-=======
->>>>>>> 192ed04a25067d6cd685ebe9785d3b0e93c183b9
