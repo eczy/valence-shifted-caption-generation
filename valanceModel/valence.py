@@ -10,17 +10,14 @@ from random import randint, sample
 # Expect a model that takes in pairs as input and outputs
 # valence rank.
 
-# There should be a list of adjecrtives that are too common
-# for use and should be treated as stop words.
-
-# Additionally, we should randomize over the top n adjectrives,
-# so if we see the same noun twice we do not necessarily get
-# the same word. Or, otherwise, we could get a set of synonyms
-# for a given noun and randomize over this set.
-
 NOUN_TAGS = ['NN', 'NNS']
 VERB_TAGS = ['VB','VBD','VBN','VBG','VBP','VBZ']
 
+
+# This class takes a sentence as input and returns all possible adjectives
+# and adverbs to pair with the nouns and verbs, respectively, in the
+# provided sentence. This step is used as the first step of combining
+# the two aspects of the project: caption generation and valence shifting.
 class mySentence:
 	def __init__(self, sentence, nlp, numPossible = 20, numChosen = 20):
 
