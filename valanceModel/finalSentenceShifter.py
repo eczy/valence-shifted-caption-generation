@@ -50,6 +50,9 @@ def main():
 		pickle.dump(newCaptionDict, f)
 	nlp.close()
 
+# This sentence was used for demos and for debugging. It 
+# just performs one iteration of the main function without
+# reading in external files.
 def individualSentenceGeneration(caption):
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	postFilter = PF()
@@ -72,6 +75,10 @@ def individualSentenceGeneration(caption):
 	nlp.close()
 	return
 
+# This function takes in a caption and a set of adjectives
+# and adverbs that pair with the nouns and verbs in the caption,
+# and has this for all outputCategories. Using these sets,
+# the adjectives and adverbs are inserted in their proper location.
 def generateOutput(caption, adj, adv, outputCategories, nlp):
 	allOutputs = []
 	myCaption = mySentence(caption, nlp)
