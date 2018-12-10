@@ -1,8 +1,5 @@
 # 595-valence-shifting-captions
 
-Stanford CoreNLP required to make this work
-Download the zip from https://stanfordnlp.github.io/CoreNLP/ and unzip it inside the head directory of your repo clone
-
 
 
 ![alt text](https://github.com/eczy/595-valence-shifting-captions/blob/master/projectFlow.png)
@@ -20,7 +17,7 @@ Dependencies:
 - matplotlib
 - pillow
 - jupyterlab (or jupyter notebook if you prefer -- package dependency is then `jupyter`)
-- stanfordcorenlp
+- stanfordcorenlp (python wrapper)
 - pickle
 
 1. Clone this repo
