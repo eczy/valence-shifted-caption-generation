@@ -1,3 +1,8 @@
+# This file defines the PostFilter object, which is used to select a single 
+# positive and negative adjective for every noun in the generate caption.
+# The object allows the user to specify a few different types of filters
+# that can be used in the processing of selecting one adjective from many.
+
 import csv
 import os
 import numpy as np
@@ -6,6 +11,7 @@ from stanfordcorenlp import StanfordCoreNLP
 import pickle
 import re
 
+# Defines the PostFilter Object
 class PostFilter:
 	_words = {}
 	_positiveWords = {}
@@ -21,7 +27,16 @@ class PostFilter:
 	_opinion = False
 	_GIL = False
 
-	# Creates a post filter object with certain sets of filters
+	# Creates a PostFilter Object
+	# dataset = <opinion> | <GIL>
+	# 	- Determines whether to read from the opinion lexicon or GIL lexicon
+	# Next set of flags only used if dataset=<GIL>. These are tags used in the GIL
+	# 	- hostile = <True/False>
+	#	- strong = <True/False>
+	#	- power = <True/False>
+	#	- pain = <True/False>
+	# 	- feel = <True/False>
+	# 	- emotion = <True/False> 
 	def __init__(self, dataset='opinion', hostile=False, strong=False, power=False, pain=False, feel=False, emotion=False):
 		self._hostile = hostile
 		self._strong = strong
@@ -49,6 +64,7 @@ class PostFilter:
 			print("dataset must be one of <opinion> or <GIL>")
 			exit()
 
+	# parses pos/neg adjectives from opinion lexicon and creates pickle
 	def parseOpinionWords(self, filename, pos=False, neg=False):
 		with open(filename, 'r', errors='ignore') as f:
 			for line in f:
@@ -67,6 +83,7 @@ class PostFilter:
 		print("Finished reading opinion words list")
 		return
 
+	# loads opinion lexicon from pickle file
 	def loadOpinionWords(self, filename):
 		with open(filename, 'rb') as f:
 			opinionWords = pickle.load(f)
@@ -75,12 +92,13 @@ class PostFilter:
 			self._negativeWords = opinionWords['neg']
 		print("Finished loading opinion words")
 
+	# loads GIL lexicon from pickle
 	def loadGeneralInquirerLexicon(self, filename):
 		generalInquirerLexicon = pickle.load(open(filename, 'rb'))
 		self._words = generalInquirerLexicon['words']
 		print("Finished Loading General Inquirer Lexicon")
 
-	# Internal function that parses the GIL csv and tags words with certain categories
+	# parses GIL lexicon and creates pos/neg words and tags, and saves as pickle
 	def parseGeneralInquirerLexicon(self, filename):
 		with open(filename, 'r') as csvfile:
 			csvReader = csv.reader(csvfile, delimiter=',')
