@@ -10,7 +10,7 @@ def main():
 
 	captionListFile = os.getcwd() + '/../Image-Captioning/test_captions.p'
 	captionList = pickle.load(open(captionListFile, 'rb'))
-	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbs.txt'
+	outFile = os.getcwd() + '/../generatedCaptionsNoAdverbsNewModel.txt'
 	postFilter = PF()
 	numCaptions = len(captionList.keys())
 	newCaptionDict = {k:{} for k in captionList}
