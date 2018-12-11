@@ -19,6 +19,8 @@ Dependencies:
 - jupyterlab (or jupyter notebook if you prefer -- package dependency is then `jupyter`)
 - stanfordcorenlp (python wrapper)
 - pickle
+- json
+- textblob
 
 1. Clone this repo
 2. Install the above dependencies
