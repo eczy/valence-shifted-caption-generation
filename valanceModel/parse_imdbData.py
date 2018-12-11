@@ -1,3 +1,12 @@
+## WARNING: Deprecated file. This file was originally used while the team was
+##            still using imdb data. However, after making the switch to Amazon
+##            data, this file was no longer maintained and may not entirely
+##            work with more recent features or additions to the system.
+# This file is used to parse amazon dataset data into a usable format.
+# It takes in the raw data (as a review with metadata) and generates a pickle
+#   containing the Noun-Adj and Verb-Adv pairs and their respective, scaled
+#   review score. It also generates intermediate forms of the data as pickles.
+
 from stanfordcorenlp import StanfordCoreNLP
 import json
 import sys
@@ -5,10 +14,8 @@ import os
 import pickle
 
 
-#   This function gets all of the training tuples from the imdb data files
-# and saves them in a pickle
-#   This function only needs to be rerun if the pickle needs to be
-# regenerated
+# Trim uneeded review metadata and create a pickle of a list of tuples
+#   where a tupe is (full review text, review sentiment from stars)
 def getTrainSentenceTuples():
     # list of all file paths to taining data (reviews)
     allTrainFiles = []
@@ -58,10 +65,7 @@ def getTrainSentenceTuples():
             pickle.dump(trainData, trainDataFile)
 
 
-# this function prepares the text from a review for parsing
-# it removes html format text (i.e. <br /><br />)
-# note: cannot yet remove capitlization or punctuation because StanfordCoreNLP
-#        requires those features for its parsing
+# Convert a 5 start (1 to 5) review sentiment to the 1 point (-1 to +1)
 def prepReviewText(text):
 
     # remove formating text inside of < >
@@ -316,8 +320,8 @@ def getTrainCounts():
 
 
 
-# input file format should be one sentence per line with proper punctuation at
-#  the end of sentences
+# The main function processes command line flags to decide which part(s) of
+#   the parsing process to run
 if __name__ == '__main__':
 
     # if newData flag is included, regenerate the pickle file of the tuple
