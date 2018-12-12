@@ -9,7 +9,6 @@ import numpy as np
 from valence import mySentence
 from stanfordcorenlp import StanfordCoreNLP
 import pickle
-import re
 
 # Defines the PostFilter Object
 class PostFilter:
@@ -122,6 +121,7 @@ class PostFilter:
 			pickle.dump(generalInquirerLexicon, open('generalInquirerLexicon.pkl', 'wb'))
 			print("Finished Parsing General Inquirer Lexicon")
 
+	# Selects one positive and one negative word per noun/verb
 	def subClassWords(self, candidateDict):
 		valenceDict = {}
 		valenceDict['pos'] = []
@@ -133,8 +133,8 @@ class PostFilter:
 			valenceDict[valenceClass].append(word)
 		for key in valenceDict:
 			if len(valenceDict[key]) > 0:
-				# randNum = np.random.randint(0, len(valenceDict[key]))
-				valenceDict[key] = valenceDict[key][0]	
+				randNum = np.random.randint(0, len(valenceDict[key]))
+				valenceDict[key] = valenceDict[key][randNum]	
 			else:
 				valenceDict[key] = ''
 		return valenceDict
@@ -147,9 +147,7 @@ class PostFilter:
 		candidateAdverbs = {}
 		for noun in s.adjectives:
 			if self._opinion:
-				# print((noun,s.adjectives[noun]))
 				commonAdjectives = list(set([(a.lower(),s.adjectives[noun][a]) for a in s.adjectives[noun] if self.isFine(a.lower(), s.adjectives[noun][a], noun, NBM)]))
-				# print((noun,commonAdjectives))
 				candidateAdjectives[noun] = self.subClassWords(commonAdjectives)
 			elif self._GIL:
 				commonAdjectives = list(set([(a,s.adjectives[noun][a]) for a in s.adjectives[noun] if a.lower() in self._words]))
@@ -170,9 +168,7 @@ class PostFilter:
 
 		for verb in s.adverbs:
 			if self._opinion:
-				# print((verb,s.adverbs[verb]))
 				commonAdverbs = list(set([(a.lower(),s.adverbs[verb][a]) for a in s.adverbs[verb] if self.isFine(a.lower(), s.adverbs[verb][a], verb, NBM)]))
-				# print((verb,commonAdverbs))
 				candidateAdverbs[verb] = self.subClassWords(commonAdverbs)
 			elif self._GIL:
 				commonAdverbs = list(set([(a,s.adverbs[verb][a]) for a in s.adverbs[verb] if a.lower() in self._words]))
@@ -192,23 +188,22 @@ class PostFilter:
 					candidateAdverbs[verb] = self.subClassWords(filteredAdverbs)
 		return candidateAdjectives, candidateAdverbs
 
+	# Used for GIL lexicon with filters set
 	def inUnion(self, word):
 		for f in self._filters:
 			if self._words[word.upper()][f]:
 				return True
 		return False
 
-
+	# Used for GIL lexicon with filters set
 	def inIntersection(self, word, filters, pos=True, neg=True):
 		for f in self._filters:
 			if not self._words[word.upper()][f]:
 				return False
 		return True
 
+	# Used for opinion lexicon
 	def isFine(self, s, tag, word, NBM):
-		# regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
-		# if regex.search(s) is None:
-		# 	return True
 		if NBM.predConfidence(tag, s, word) < 0.5:
 			return False
 		# if tag == 'pos':
@@ -221,6 +216,6 @@ class PostFilter:
 if __name__ == '__main__':
 	nlp = StanfordCoreNLP(r'../stanford-corenlp-full-2018-10-05', memory='8g')
 	filteredAdjectivesAndAdverbs = PostFilter()
-	adj, adv = filteredAdjectivesAndAdverbs.filter('There is a knife room', nlp)
+	adj, adv = filteredAdjectivesAndAdverbs.filter('A person wearing a yellow shirt is standing in water .', nlp)
 	nlp.close()
 	print(adj, adv)
