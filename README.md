@@ -29,6 +29,7 @@ Dependencies:
 
 
 1. Clone this repo
+2. Pull the Image-Captioning submodule by running `git submodule update --recursive --remote`
 2. Install the above dependencies using `pip install`
 3. Download StanfordCoreNLP 3.9.2 zip from http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip and unpack the zip inside 595-valence-shifting-captions/
 4. Download the Amazon data submitted by the team - the necessary data has already been parsed (parsing yourself will take several days of computing time). Unzip the file and move `amazonRawData/`, `amazon_counts/`, `amazon_pairTuples/`, and `amazon_sentenceTuples/` into `595-valence-shifting-captions/valanceModel/`
