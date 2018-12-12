@@ -15,19 +15,17 @@ If you already have a Python 3.6 environment, activiate it. Otherwise, follow th
 
 
 Dependencies:
-- Keras 1.2.2
-- Tensorflow 0.12.1
-- tqdm
-- numpy
-- pandas
-- matplotlib
-- pillow
-- jupyterlab (or jupyter notebook if you prefer -- package dependency is then `jupyter`)
-- stanfordcorenlp (python wrapper)
-- pickle
-- json
-- textblob
-- progressbar2
+- `keras==1.2.2`
+- `tensorflow==0.12.1`
+- `tqdm`
+- `numpy`
+- `pandas`
+- `matplotlib`
+- `pillow`
+- `jupyterlab` (or jupyter notebook if you prefer -- package dependency is then `jupyter`)
+- `stanfordcorenlp` (python wrapper)
+- `textblob`
+- `progressbar2`
 
 
 1. Clone this repo
