@@ -21,6 +21,7 @@ Dependencies:
 - pickle
 - json
 - textblob
+- progressbar2
 
 1. Clone this repo
 2. Install the above dependencies
