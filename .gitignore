@@ -4,11 +4,13 @@ venv/*
 
 *.pyc
 
+valanceModel/aclImdb/
+
 valanceModel/amazonRawData
 valanceModel/amazon_sentenceTuples/
+valanceModel/amazon_counts/
 
 valanceModel/DrewUtil.py
 
-valanceModel/amazon_counts/
 
 valanceModel/__pycache__/*
