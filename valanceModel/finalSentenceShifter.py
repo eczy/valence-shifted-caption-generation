@@ -95,5 +95,5 @@ def generateOutput(caption, adj, adv, outputCategories, nlp):
 	return allOutputs
 
 if __name__ == "__main__":
-	main()
-	# individualSentenceGeneration("A man with a spatula is laughing")
+	# main()
+	individualSentenceGeneration("A man with a spatula is laughing")
