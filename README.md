@@ -39,7 +39,7 @@ Dependencies:
 
 ## Processing an Example Image
 1. Run Jupyter lab or Jupyter notebook *AS ROOT* (this is unfortunately required by StanfordCoreNLP).
-The command is `jupyter lab` or `jupyter notebook` depending on your preference.
+The command is `jupyter lab --allow-root` or `jupyter notebook --allow-root` depending on your preference.
     - Note: if you are not using your base anaconda environment, you should add the
 environment you will be using to the set of ipython kernels so that the installed
 dependencies can be used by the notebook. If this is the case, then activate your desired environment and run
